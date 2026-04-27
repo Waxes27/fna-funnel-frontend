@@ -16,7 +16,7 @@ The platform is an AI-assisted digital financial planning system designed to hel
 
 **Important:** The system does NOT provide regulated financial advice automatically. All product recommendations must be reviewed and confirmed by a licensed adviser.
 
-***
+---
 
 ### 2. User Types
 
@@ -56,7 +56,7 @@ Platform management user.
 - Manage users
 - Monitor analytics
 
-***
+---
 
 ### 3. Core Platform Modules
 
@@ -78,7 +78,7 @@ The platform consists of the following core systems:
 14. Compliance & Audit System
 15. Notification System
 
-***
+---
 
 ### 4. Authentication System
 
@@ -100,7 +100,7 @@ The platform consists of the following core systems:
 **Process:** Email reset link
 **Rules:** Token expiry 15 minutes
 
-***
+---
 
 ### 5. Client Profile Engine
 
@@ -120,7 +120,7 @@ The platform consists of the following core systems:
 
 **Fields:** Spouse income, Household expenses
 
-***
+---
 
 ### 6. Financial Data Capture System
 
@@ -140,7 +140,7 @@ The platform consists of the following core systems:
 
 **Categories:** Housing, Utilities, Food, Transport, Insurance, School fees, Debt repayments
 
-***
+---
 
 ### 7. Budget Analysis Engine
 
@@ -148,7 +148,7 @@ The platform consists of the following core systems:
 **Calculations:** Total Income, Total Expenses, Monthly Surplus, Savings Rate
 **Outputs:** Budget health score, Expense breakdown chart
 
-***
+---
 
 ### 8. Financial Needs Analysis Engine
 
@@ -178,7 +178,7 @@ The FNA Engine evaluates a user's financial protection and investment gaps.
 **Inputs:** Number of children, Current age
 **Outputs:** Projected tertiary education costs
 
-***
+---
 
 ### 9. Retirement Projection Engine
 
@@ -187,7 +187,7 @@ The FNA Engine evaluates a user's financial protection and investment gaps.
 **Calculations:** Projected Retirement Capital, Income Replacement Ratio
 **Outputs:** Retirement readiness score, Capital shortfall
 
-***
+---
 
 ### 10. Estate Planning Analysis
 
@@ -195,15 +195,15 @@ The FNA Engine evaluates a user's financial protection and investment gaps.
 **Calculations:** Estate Value, Executor Fees Estimate, Estate Duty Estimate
 **Risk Flags:** No will, Estate liquidity shortage
 
-***
+---
 
 ### 11. Risk Profiling System
 
 **Questionnaire:** 10–15 behavioural investment questions
 **Scoring Output:** Conservative, Moderate, Balanced, Growth, Aggressive
-*(The score influences investment projections.)*
+_(The score influences investment projections.)_
 
-***
+---
 
 ### 12. AI Financial Assistant
 
@@ -211,7 +211,7 @@ The FNA Engine evaluates a user's financial protection and investment gaps.
 **Capabilities:** Answer finance questions, Explain financial results, Guide users through FNA
 **Restrictions:** Cannot recommend specific financial products, Must suggest consultation with adviser
 
-***
+---
 
 ### 13. Scenario Simulation Engine
 
@@ -224,7 +224,7 @@ Users can simulate changes including:
 
 **Outputs:** Updated retirement projections, Interactive graphs
 
-***
+---
 
 ### 14. Reporting Engine
 
@@ -235,7 +235,7 @@ Users can simulate changes including:
 
 **Export Options:** PDF, Download report
 
-***
+---
 
 ### 15. Adviser Dashboard
 
@@ -245,14 +245,14 @@ Users can simulate changes including:
 - **Client File:** Profile data, Financial analysis, Documents
 - **Advice Preparation:** Editable assumptions, Notes
 
-***
+---
 
 ### 16. Compliance & Audit System
 
 **The system must record:** Client consent, Data edits, AI interactions, Adviser adjustments
 **Retention Period:** Minimum 5 years
 
-***
+---
 
 ### 17. Notification System
 
@@ -260,14 +260,14 @@ Users can simulate changes including:
 **Adviser Notifications:** New client registered, FNA completed
 **Delivery Channels:** Email, In-app notification
 
-***
+---
 
 ### 18. Admin Panel
 
 **Capabilities:** Manage users, Adjust financial assumptions, Monitor platform analytics
 **Adjustable Variables:** Inflation, Investment return assumptions, Life expectancy
 
-***
+---
 
 ### 19. MVP Feature List
 
@@ -284,7 +284,7 @@ The Minimum Viable Product must include:
 - Adviser dashboard
 - PDF reporting
 
-***
+---
 
 ### 20. Recommended Technology Stack
 
@@ -294,4 +294,3 @@ The Minimum Viable Product must include:
 - **AI Layer:** LLM API integration (NotebookLM)
 - **Cloud Infrastructure:** AWS / Azure / GCP
 - **Security:** OAuth authentication, Encrypted storage
-
