@@ -1,0 +1,13 @@
+{
+  "host": "http://localhost",
+  "ports": [
+    8080,
+    9002
+  ],
+  "path_template": "/v3/api-docs",
+  "headers": {
+    "Accept": "*/*"
+  },
+  "timeout_seconds": 15,
+  "output_dir": "downloads"
+}
