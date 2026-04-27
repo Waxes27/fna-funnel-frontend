@@ -10,7 +10,7 @@ This document outlines the client-side architecture, UI/UX specifications, and f
 
 ### 1.1 Client-Side Technologies
 
-- **Framework:** Next.js (React)
+- **Framework:** React Native (React)
 - **State Management:** Zustand / React Context API
 - **Styling:** Tailwind CSS + Radix UI (or similar accessible component library)
 - **Data Fetching:** React Query / SWR (for caching, pagination, and sync with Backend API)
@@ -19,7 +19,7 @@ This document outlines the client-side architecture, UI/UX specifications, and f
 
 ### 1.2 Frontend Architecture
 
-- **App Router:** Utilizing Next.js App Router for layouts and Server-Side Rendering (SSR).
+- **App Router:** Utilizing React Native App Router for layouts and Server-Side Rendering (SSR).
 - **Component Structure:** Atomic design principles (Atoms, Molecules, Organisms, Templates, Pages).
 - **Authentication Flow:**
   - Token-based (JWT) managed via HttpOnly cookies (coordinated with backend).
@@ -135,12 +135,12 @@ interface FinancialData {
 Required `.env.local` configuration:
 
 ```env
-NEXT_PUBLIC_API_BASE_URL=https://api.momentum-fna.com/v1
-NEXT_PUBLIC_AI_ASSISTANT_ENABLED=true
-NEXT_PUBLIC_ENVIRONMENT=production
+API_BASE_URL=https://api.momentum-fna.com/v1
+AI_ASSISTANT_ENABLED=true
+ENVIRONMENT=production
 ```
 
 ### 7.3 Deployment Procedure
 
 - **Platform:** Vercel, AWS Amplify, or Dockerized on AWS ECS (aligning with backend cloud).
-- **CI/CD:** GitHub Actions pipeline to run tests, build the Next.js app, and deploy to staging/production automatically on branch merges.
+- **CI/CD:** GitHub Actions pipeline to run tests, build the React Native app, and deploy to staging/production automatically on branch merges.
