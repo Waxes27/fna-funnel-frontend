@@ -1,4 +1,8 @@
 import { registerRootComponent } from 'expo';
+import { setupMocks } from './src/mocks';
+
+// Initialize mock API data layer
+setupMocks();
 
 import App from './App';
 

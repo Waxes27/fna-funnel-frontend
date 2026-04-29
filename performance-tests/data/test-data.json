@@ -1,0 +1,12 @@
+{
+  "users": [
+    { "email": "test1@example.com", "password": "password123" },
+    { "email": "test2@example.com", "password": "password123" },
+    { "email": "test3@example.com", "password": "password123" }
+  ],
+  "funnelPayloads": [
+    { "step": 1, "data": { "age": 30, "income": 50000, "maritalStatus": "single" } },
+    { "step": 2, "data": { "dependents": 2, "savings": 10000, "debt": 5000 } },
+    { "step": 3, "data": { "goals": ["retirement", "emergency_fund"] } }
+  ]
+}

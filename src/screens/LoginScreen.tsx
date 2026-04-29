@@ -7,6 +7,8 @@ import * as z from 'zod';
 import Input from '../components/Input';
 import CustomButton from '../components/Button';
 import { useAppStore } from '../store/appStore';
+import apiClient from '../services/apiClient';
+import { Alert } from 'react-native';
 
 // Define the validation schema with Zod
 const loginSchema = z.object({
@@ -32,16 +34,19 @@ const LoginScreen = ({ navigation }: any) => {
   });
 
   const onSubmit = async (data: LoginFormData) => {
-    // TODO: Connect to backend authentication API
-    // For now, simulate a login call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // Simulate successful login
-    login({
-      id: '123',
-      email: data.email,
-      role: 'CLIENT',
-    });
+    try {
+      const response = await apiClient.post('/auth/login', {
+        email: data.email,
+        password: data.password,
+      });
+      
+      const { token, user } = response.data;
+      
+      // In a real app, save token to SecureStore here
+      login(user);
+    } catch (error: any) {
+      Alert.alert('Login Failed', error.response?.data?.message || 'An error occurred during login.');
+    }
   };
 
   return (

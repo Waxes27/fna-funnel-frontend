@@ -1,8 +1,7 @@
 {
   "host": "http://localhost",
   "ports": [
-    8080,
-    9002
+    8080
   ],
   "path_template": "/v3/api-docs",
   "headers": {
