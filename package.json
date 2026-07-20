@@ -6,7 +6,7 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web",
+    "web": "expo start --web --port 80",
     "lint": "eslint .",
     "format": "prettier --write .",
     "generate-api": "powershell -ExecutionPolicy Bypass -File ./generate-api.ps1",
