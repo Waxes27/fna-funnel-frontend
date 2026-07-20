@@ -17,7 +17,7 @@ interface BottomSheetProps {
 }
 
 export const BottomSheet: React.FC<BottomSheetProps> = ({ visible, onClose, children }) => {
-  const { colors, spacing, shadows, layout } = useTheme();
+  const { colors, spacing, shadows, layout, radii } = useTheme();
 
   return (
     <Modal
@@ -35,14 +35,14 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ visible, onClose, chil
             <View style={[styles.background, { backgroundColor: colors.overlay }]} />
           </TouchableWithoutFeedback>
           <View style={[styles.sheetContainer, { 
-            backgroundColor: colors.surface, 
+            backgroundColor: colors.surfaceRaised, 
             paddingTop: spacing.md, 
             paddingHorizontal: spacing.lg, 
             paddingBottom: spacing.xxl 
-          }, shadows.lg]}>
+          }, shadows.level2, { borderTopLeftRadius: radii.frame, borderTopRightRadius: radii.frame }]}>
             <View style={[styles.contentWrapper, { maxWidth: layout.maxWidth }]}>
               <View style={[styles.handleContainer, { marginBottom: spacing.lg }]}>
-                <View style={[styles.handle, { backgroundColor: colors.border }]} />
+                <View style={[styles.handle, { backgroundColor: colors.dustTaupe }]} />
               </View>
               {children}
             </View>
@@ -65,8 +65,6 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
   },
   sheetContainer: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
     maxHeight: '90%',
   },
   contentWrapper: {

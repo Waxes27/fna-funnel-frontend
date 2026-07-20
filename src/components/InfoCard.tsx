@@ -1,6 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { useTheme } from '../theme';
+import { Surface } from './Surface';
+import { Typography } from './Typography';
 
 interface InfoCardProps {
   title: string;
@@ -8,32 +10,42 @@ interface InfoCardProps {
 }
 
 export const InfoCard: React.FC<InfoCardProps> = ({ title, items }) => {
-  const { colors, spacing, typography, shadows } = useTheme();
+  const { colors, spacing, radii } = useTheme();
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.surface, padding: spacing.lg, marginBottom: spacing.md }, shadows.md]} accessible={true}>
-      <Text style={[styles.title, { color: colors.text, fontFamily: typography.fontFamily, fontSize: typography.sizes.lg, fontWeight: typography.weights.bold, marginBottom: spacing.md }]}>
+    <Surface
+      radius="frame"
+      shadow="level1"
+      bordered
+      style={[styles.card, { backgroundColor: colors.surfaceRaised, padding: spacing.lg, marginBottom: spacing.md, borderRadius: radii.frame }]}
+      accessible={true}
+    >
+      <Typography variant="h3" style={[styles.title, { marginBottom: spacing.md }]}>
         {title}
-      </Text>
+      </Typography>
       <View style={[styles.divider, { backgroundColor: colors.border, marginBottom: spacing.md }]} />
       {items.map((item, index) => (
-        <View key={index} style={[styles.row, { marginBottom: index === items.length - 1 ? 0 : spacing.md }]} accessible={true} accessibilityLabel={`${item.label}: ${item.value || 'Not provided'}`}>
-          <Text style={[styles.label, { color: colors.textSecondary, fontFamily: typography.fontFamily, fontSize: typography.sizes.sm, lineHeight: typography.lineHeights.sm }]}>
+        <View
+          key={index}
+          style={[styles.row, { marginBottom: index === items.length - 1 ? 0 : spacing.md }]}
+          accessible={true}
+          accessibilityLabel={`${item.label}: ${item.value || 'Not provided'}`}
+        >
+          <Typography variant="footerLink" style={[styles.label, { color: colors.textSecondary }]}>
             {item.label}
-          </Text>
-          <Text style={[styles.value, { color: colors.text, fontFamily: typography.fontFamily, fontSize: typography.sizes.sm, lineHeight: typography.lineHeights.sm, fontWeight: typography.weights.medium }]} numberOfLines={2}>
+          </Typography>
+          <Typography variant="footerLink" style={[styles.value]} numberOfLines={2}>
             {item.value || 'Not provided'}
-          </Text>
+          </Typography>
         </View>
       ))}
-    </View>
+    </Surface>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
     marginHorizontal: 20, // This will be overridden or managed by parent container's layout
-    borderRadius: 16,
   },
   title: {
     // Styling handled by inline tokens

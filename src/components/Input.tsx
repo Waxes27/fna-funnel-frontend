@@ -1,5 +1,7 @@
 import React from 'react';
 import { View, TextInput, Text, StyleSheet, TextInputProps, ViewStyle } from 'react-native';
+import { useTheme } from '../theme';
+import { Typography } from './Typography';
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -8,15 +10,33 @@ interface InputProps extends TextInputProps {
 }
 
 const Input: React.FC<InputProps> = ({ label, error, containerStyle, style, ...props }) => {
+  const { colors, radii, typography } = useTheme();
+
   return (
     <View style={[styles.container, containerStyle]}>
-      {label && <Text style={styles.label}>{label}</Text>}
+      {label ? (
+        <Typography
+          variant="h4"
+          style={[styles.label, { color: colors.text, fontFamily: typography.families.primary ?? typography.families.fallback }]}
+        >
+          {label}
+        </Typography>
+      ) : null}
       <TextInput
-        style={[styles.input, error ? styles.inputError : null, style]}
-        placeholderTextColor="#999"
+        style={[
+          styles.input,
+          { backgroundColor: colors.surfaceRaised, borderColor: colors.border, borderRadius: radii.primary, color: colors.text },
+          error ? styles.inputError : null,
+          style,
+        ]}
+        placeholderTextColor={colors.textSecondary}
         {...props}
       />
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+      {error ? (
+        <Typography variant="footerLink" style={[styles.errorText, { color: colors.signalOrange }]}>
+          {error}
+        </Typography>
+      ) : null}
     </View>
   );
 };
@@ -27,28 +47,18 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
     marginBottom: 6,
   },
   input: {
-    backgroundColor: '#F5F7FA',
     borderWidth: 1,
-    borderColor: '#E0E5EC',
-    borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
-    color: '#333',
   },
   inputError: {
-    borderColor: '#D32F2F', // Error red
-    backgroundColor: '#FFEBEE',
+    borderColor: 'rgba(207, 69, 0, 0.65)',
   },
   errorText: {
-    color: '#D32F2F',
-    fontSize: 12,
     marginTop: 4,
     marginLeft: 4,
   },

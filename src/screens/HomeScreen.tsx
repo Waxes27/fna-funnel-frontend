@@ -1,14 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator } from 'react-native';
 import CustomButton from '../components/Button';
+import { Screen } from '../components/Screen';
+import { Surface } from '../components/Surface';
+import { Typography } from '../components/Typography';
 import { useAppStore } from '../store/appStore';
 import apiClient from '../services/apiClient';
+import { useTheme } from '../theme';
 
 const HomeScreen = ({ navigation: _navigation }: any) => {
   const { user, logout } = useAppStore();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { colors, spacing } = useTheme();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -34,105 +39,74 @@ const HomeScreen = ({ navigation: _navigation }: any) => {
   }, [user]);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Welcome to Momentum FNA</Text>
-      <Text style={styles.subtitle}>AI Financial Advisor Platform</Text>
+    <Screen>
+      <View style={{ paddingTop: spacing.xl, paddingBottom: spacing.lg }}>
+        <Typography variant="h2">Momentum FNA</Typography>
+        <View style={{ height: spacing.xs }} />
+        <Typography variant="body" style={{ color: colors.textSecondary }}>
+          Your financial advisory workspace.
+        </Typography>
+      </View>
 
-      {user && <Text style={styles.userInfo}>Logged in as: {user.email}</Text>}
+      {user ? (
+        <Surface
+          radius="frame"
+          bordered
+          style={{ padding: spacing.lg, marginBottom: spacing.lg, backgroundColor: colors.surfaceRaised }}
+        >
+          <Typography variant="eyebrow" withDot>
+            Signed In
+          </Typography>
+          <View style={{ height: spacing.sm }} />
+          <Typography variant="body">{user.email}</Typography>
+        </Surface>
+      ) : null}
+
       {loading ? (
-        <ActivityIndicator size="large" color="#003366" style={{ marginVertical: 20 }} />
+        <ActivityIndicator size="large" color={colors.ink} style={{ marginVertical: spacing.lg }} />
       ) : error ? (
-        <View style={styles.errorCard}>
-          <Text style={styles.errorText}>{error}</Text>
-          <CustomButton 
-            title="Setup Profile" 
-            onPress={() => console.log('Navigate to profile setup')} 
-            style={styles.setupButton}
-          />
-        </View>
+        <Surface
+          radius="frame"
+          bordered
+          style={{ padding: spacing.lg, marginBottom: spacing.lg, backgroundColor: colors.surfaceRaised }}
+        >
+          <Typography variant="eyebrow" withDot dotColor={colors.lightSignalOrange}>
+            Action Needed
+          </Typography>
+          <View style={{ height: spacing.sm }} />
+          <Typography variant="body" style={{ color: colors.textSecondary }}>
+            {error}
+          </Typography>
+          <View style={{ height: spacing.lg }} />
+          <CustomButton title="Setup Profile" onPress={() => console.log('Navigate to profile setup')} />
+        </Surface>
       ) : profile ? (
-        <View style={styles.profileCard}>
-          <Text style={styles.profileText}>Name: {user?.firstName} {user?.lastName}</Text>
-          <Text style={styles.profileText}>Role: {user?.role}</Text>
-          <Text style={styles.profileText}>Occupation: {profile.occupation}</Text>
-        </View>
+        <Surface
+          radius="frame"
+          bordered
+          style={{ padding: spacing.lg, marginBottom: spacing.lg, backgroundColor: colors.surfaceRaised }}
+        >
+          <Typography variant="eyebrow" withDot>
+            Snapshot
+          </Typography>
+          <View style={{ height: spacing.sm }} />
+          <Typography variant="body">
+            Role: {user?.role}
+          </Typography>
+          <View style={{ height: spacing.xs }} />
+          <Typography variant="body">Occupation: {profile.occupation}</Typography>
+        </Surface>
       ) : null}
 
       <CustomButton
         title="Start Financial Analysis"
         onPress={() => console.log('Start FNA')}
-        style={styles.button}
+        style={{ marginBottom: spacing.md }}
       />
 
-      <CustomButton title="Log Out" variant="outline" onPress={logout} style={styles.button} />
-    </View>
+      <CustomButton title="Log Out" variant="secondary" onPress={logout} style={{ marginBottom: spacing.md }} />
+    </Screen>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#fff',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#003366', // Momentum blue approximation
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 20,
-  },
-  userInfo: {
-    fontSize: 14,
-    color: '#333',
-    marginBottom: 10,
-    fontWeight: '500',
-  },
-  profileCard: {
-    backgroundColor: '#F5F7FA',
-    padding: 16,
-    borderRadius: 8,
-    width: '100%',
-    marginBottom: 30,
-    borderWidth: 1,
-    borderColor: '#E0E5EC',
-  },
-  profileText: {
-    fontSize: 14,
-    color: '#333',
-    marginBottom: 6,
-  },
-  errorCard: {
-    backgroundColor: '#FFEBEE',
-    padding: 16,
-    borderRadius: 8,
-    width: '100%',
-    marginBottom: 30,
-    borderWidth: 1,
-    borderColor: '#FFCDD2',
-    alignItems: 'center',
-  },
-  errorText: {
-    fontSize: 14,
-    color: '#D32F2F',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  setupButton: {
-    width: 'auto',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-  },
-  button: {
-    marginBottom: 16,
-    width: '100%',
-  },
-});
 
 export default HomeScreen;

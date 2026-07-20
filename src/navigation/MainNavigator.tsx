@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import HomeScreen from '../screens/HomeScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import { useAppStore } from '../store/appStore';
+import { useTheme } from '../theme';
 
 export type MainStackParamList = {
   Home: undefined;
@@ -20,6 +21,8 @@ const Stack = createNativeStackNavigator<MainStackParamList>();
 const Tab = createBottomTabNavigator<ClientTabParamList>();
 
 const ClientTabNavigator = () => {
+  const { colors, radii, shadows } = useTheme();
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -36,8 +39,22 @@ const ClientTabNavigator = () => {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#007BFF',
-        tabBarInactiveTintColor: 'gray',
+        tabBarActiveTintColor: colors.ink,
+        tabBarInactiveTintColor: colors.textSecondary,
+        tabBarStyle: [
+          {
+            backgroundColor: colors.surfaceRaised,
+            borderTopColor: 'transparent',
+            borderTopWidth: 0,
+            position: 'absolute',
+            left: 16,
+            right: 16,
+            bottom: 16,
+            borderRadius: radii.pill,
+            paddingTop: 6,
+          },
+          shadows.level1,
+        ],
         headerShown: false,
       })}
     >

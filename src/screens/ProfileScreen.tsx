@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, ScrollView, Animated, ActivityIndicator, Alert, Text, TouchableOpacity, TextInput } from 'react-native';
+import { View, StyleSheet, ScrollView, Animated, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -15,6 +15,9 @@ import { InfoCard } from '../components/InfoCard';
 import { BottomSheet } from '../components/BottomSheet';
 import { OverflowMenu } from '../components/OverflowMenu';
 import { Ionicons } from '@expo/vector-icons';
+import Input from '../components/Input';
+import CustomButton from '../components/Button';
+import { Typography } from '../components/Typography';
 
 const profileSchema = z.object({
   fullName: z.string().min(2, 'Full name is required'),
@@ -40,7 +43,7 @@ type FinancialFormData = z.infer<typeof financialSchema>;
 
 export default function ProfileScreen() {
   const { user, profile: cachedProfile, setProfile, logout } = useAppStore();
-  const { colors, primary, isDark, spacing, typography, layout, shadows } = useTheme();
+  const { colors, spacing, typography, layout, shadows, radii } = useTheme();
   
   const scrollY = useRef(new Animated.Value(0)).current;
   const [activeTab, setActiveTab] = useState(0); // 0 = Personal, 1 = Financial
@@ -217,7 +220,7 @@ export default function ProfileScreen() {
 
           <View style={[styles.cardsContainer, { paddingTop: spacing.md }]}>
             {isFetchingProfile || isFetchingFinancial ? (
-              <ActivityIndicator size="large" color={primary} style={{ marginTop: spacing.xxl }} accessibilityLabel="Loading data" />
+              <ActivityIndicator size="large" color={colors.ink} style={{ marginTop: spacing.xxl }} accessibilityLabel="Loading data" />
             ) : (
               activeTab === 0 ? renderPersonalCards() : renderFinancialCards()
             )}
@@ -228,242 +231,159 @@ export default function ProfileScreen() {
       {/* Floating Action Button for Editing */}
       <View style={[styles.fabWrapper, { maxWidth: layout.maxWidth }]} pointerEvents="box-none">
         <TouchableOpacity 
-          style={[styles.fab, { backgroundColor: primary }, shadows.lg]} 
+          style={[
+            styles.fab,
+            {
+              backgroundColor: colors.surfaceRaised,
+              borderColor: colors.border,
+              borderWidth: 1,
+              borderRadius: radii.circle,
+            },
+            shadows.level2,
+          ]} 
           onPress={() => activeTab === 0 ? setIsEditProfileVisible(true) : setIsEditFinancialVisible(true)}
           accessibilityLabel={activeTab === 0 ? "Edit Personal Information" : "Edit Financial Information"}
           accessibilityRole="button"
         >
-          <Ionicons name="pencil" size={24} color="#FFF" />
+          <Ionicons name="pencil" size={22} color={colors.ink} />
         </TouchableOpacity>
       </View>
 
       {/* Edit Profile Bottom Sheet */}
       <BottomSheet visible={isEditProfileVisible} onClose={() => setIsEditProfileVisible(false)}>
         <ScrollView style={styles.sheetScroll} showsVerticalScrollIndicator={false}>
-          <Text style={[styles.sheetTitle, { 
-            color: colors.text,
-            fontFamily: typography.fontFamily,
-            fontSize: typography.sizes.xl,
-            fontWeight: typography.weights.bold,
-            marginBottom: spacing.lg 
-          }]}>Edit Personal Info</Text>
-          
-          <View style={[styles.inputGroup, { marginBottom: spacing.md }]}>
-            <Text style={[styles.label, { 
-              color: colors.textSecondary,
-              fontFamily: typography.fontFamily,
-              fontSize: typography.sizes.sm,
-              marginBottom: spacing.sm 
-            }]}>Full Name</Text>
+          <Typography variant="h3" style={{ marginBottom: spacing.lg }}>
+            Edit Personal Info
+          </Typography>
+
+          <View style={{ marginBottom: spacing.md }}>
             <Controller
               control={profileForm.control}
               name="fullName"
-              render={({ field: { onChange, value } }) => (
-                <TextInput 
-                  style={[styles.input, { 
-                    backgroundColor: colors.background, 
-                    color: colors.text, 
-                    borderColor: colors.border,
-                    fontFamily: typography.fontFamily,
-                    fontSize: typography.sizes.md,
-                    paddingHorizontal: spacing.md,
-                    paddingVertical: spacing.sm,
-                  }]} 
-                  onChangeText={onChange} 
-                  value={value} 
-                  accessibilityLabel="Full Name Input"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <Input
+                  label="Full Name"
+                  placeholder="Enter full name"
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                  error={profileForm.formState.errors.fullName?.message}
                 />
               )}
             />
-            {profileForm.formState.errors.fullName && <Text style={[styles.error, { fontFamily: typography.fontFamily, marginTop: spacing.xs }]}>{profileForm.formState.errors.fullName.message}</Text>}
           </View>
 
-          <View style={[styles.inputGroup, { marginBottom: spacing.md }]}>
-            <Text style={[styles.label, { 
-              color: colors.textSecondary,
-              fontFamily: typography.fontFamily,
-              fontSize: typography.sizes.sm,
-              marginBottom: spacing.sm 
-            }]}>ID Number</Text>
+          <View style={{ marginBottom: spacing.md }}>
             <Controller
               control={profileForm.control}
               name="idNumber"
-              render={({ field: { onChange, value } }) => (
-                <TextInput 
-                  style={[styles.input, { 
-                    backgroundColor: colors.background, 
-                    color: colors.text, 
-                    borderColor: colors.border,
-                    fontFamily: typography.fontFamily,
-                    fontSize: typography.sizes.md,
-                    paddingHorizontal: spacing.md,
-                    paddingVertical: spacing.sm,
-                  }]} 
-                  onChangeText={onChange} 
-                  value={value} 
-                  keyboardType="number-pad" 
-                  accessibilityLabel="ID Number Input"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <Input
+                  label="ID Number"
+                  placeholder="Enter ID number"
+                  keyboardType="number-pad"
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                  error={profileForm.formState.errors.idNumber?.message}
                 />
               )}
             />
-            {profileForm.formState.errors.idNumber && <Text style={[styles.error, { fontFamily: typography.fontFamily, marginTop: spacing.xs }]}>{profileForm.formState.errors.idNumber.message}</Text>}
           </View>
 
-          <View style={[styles.inputGroup, { marginBottom: spacing.md }]}>
-            <Text style={[styles.label, { 
-              color: colors.textSecondary,
-              fontFamily: typography.fontFamily,
-              fontSize: typography.sizes.sm,
-              marginBottom: spacing.sm 
-            }]}>Mobile Number</Text>
+          <View style={{ marginBottom: spacing.md }}>
             <Controller
               control={profileForm.control}
               name="mobileNumber"
-              render={({ field: { onChange, value } }) => (
-                <TextInput 
-                  style={[styles.input, { 
-                    backgroundColor: colors.background, 
-                    color: colors.text, 
-                    borderColor: colors.border,
-                    fontFamily: typography.fontFamily,
-                    fontSize: typography.sizes.md,
-                    paddingHorizontal: spacing.md,
-                    paddingVertical: spacing.sm,
-                  }]} 
-                  onChangeText={onChange} 
-                  value={value} 
-                  keyboardType="phone-pad" 
-                  accessibilityLabel="Mobile Number Input"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <Input
+                  label="Mobile Number"
+                  placeholder="Enter mobile number"
+                  keyboardType="phone-pad"
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                  error={profileForm.formState.errors.mobileNumber?.message}
                 />
               )}
             />
-            {profileForm.formState.errors.mobileNumber && <Text style={[styles.error, { fontFamily: typography.fontFamily, marginTop: spacing.xs }]}>{profileForm.formState.errors.mobileNumber.message}</Text>}
           </View>
 
-          <View style={[styles.inputGroup, { marginBottom: spacing.md }]}>
-            <Text style={[styles.label, { 
-              color: colors.textSecondary,
-              fontFamily: typography.fontFamily,
-              fontSize: typography.sizes.sm,
-              marginBottom: spacing.sm 
-            }]}>Email</Text>
+          <View style={{ marginBottom: spacing.md }}>
             <Controller
               control={profileForm.control}
               name="email"
-              render={({ field: { onChange, value } }) => (
-                <TextInput 
-                  style={[styles.input, { 
-                    backgroundColor: colors.background, 
-                    color: colors.text, 
-                    borderColor: colors.border,
-                    fontFamily: typography.fontFamily,
-                    fontSize: typography.sizes.md,
-                    paddingHorizontal: spacing.md,
-                    paddingVertical: spacing.sm,
-                  }]} 
-                  onChangeText={onChange} 
-                  value={value} 
-                  keyboardType="email-address" 
-                  autoCapitalize="none" 
-                  accessibilityLabel="Email Input"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <Input
+                  label="Email"
+                  placeholder="Enter email address"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                  error={profileForm.formState.errors.email?.message}
                 />
               )}
             />
-            {profileForm.formState.errors.email && <Text style={[styles.error, { fontFamily: typography.fontFamily, marginTop: spacing.xs }]}>{profileForm.formState.errors.email.message}</Text>}
           </View>
 
-          <TouchableOpacity 
-            style={[styles.saveButton, { backgroundColor: primary, paddingVertical: spacing.md, marginTop: spacing.sm, marginBottom: spacing.lg }]} 
-            onPress={profileForm.handleSubmit(onProfileSubmit)} 
-            disabled={isSavingProfile}
-            accessibilityRole="button"
-            accessibilityLabel="Save Changes"
-          >
-            {isSavingProfile ? <ActivityIndicator color="#FFF" /> : <Text style={[styles.saveButtonText, { fontFamily: typography.fontFamily, fontSize: typography.sizes.md }]}>Save Changes</Text>}
-          </TouchableOpacity>
+          <CustomButton
+            title="Save Changes"
+            onPress={profileForm.handleSubmit(onProfileSubmit)}
+            isLoading={isSavingProfile}
+            style={{ marginTop: spacing.sm, marginBottom: spacing.lg }}
+          />
         </ScrollView>
       </BottomSheet>
 
       {/* Edit Financial Bottom Sheet */}
       <BottomSheet visible={isEditFinancialVisible} onClose={() => setIsEditFinancialVisible(false)}>
         <ScrollView style={styles.sheetScroll} showsVerticalScrollIndicator={false}>
-          <Text style={[styles.sheetTitle, { 
-            color: colors.text,
-            fontFamily: typography.fontFamily,
-            fontSize: typography.sizes.xl,
-            fontWeight: typography.weights.bold,
-            marginBottom: spacing.lg 
-          }]}>Edit Financial Summary</Text>
-          
-          <View style={[styles.inputGroup, { marginBottom: spacing.md }]}>
-            <Text style={[styles.label, { 
-              color: colors.textSecondary,
-              fontFamily: typography.fontFamily,
-              fontSize: typography.sizes.sm,
-              marginBottom: spacing.sm 
-            }]}>Monthly Income (ZAR)</Text>
+          <Typography variant="h3" style={{ marginBottom: spacing.lg }}>
+            Edit Financial Summary
+          </Typography>
+
+          <View style={{ marginBottom: spacing.md }}>
             <Controller
               control={financialForm.control}
               name="monthlyIncome"
-              render={({ field: { onChange, value } }) => (
-                <TextInput 
-                  style={[styles.input, { 
-                    backgroundColor: colors.background, 
-                    color: colors.text, 
-                    borderColor: colors.border,
-                    fontFamily: typography.fontFamily,
-                    fontSize: typography.sizes.md,
-                    paddingHorizontal: spacing.md,
-                    paddingVertical: spacing.sm,
-                  }]} 
-                  onChangeText={val => onChange(parseInt(val) || 0)} 
-                  value={value?.toString()} 
-                  keyboardType="numeric" 
-                  accessibilityLabel="Monthly Income Input"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <Input
+                  label="Monthly Income (ZAR)"
+                  placeholder="0"
+                  keyboardType="numeric"
+                  onBlur={onBlur}
+                  onChangeText={(val) => onChange(parseInt(val) || 0)}
+                  value={value?.toString()}
                 />
               )}
             />
           </View>
 
-          <View style={[styles.inputGroup, { marginBottom: spacing.md }]}>
-            <Text style={[styles.label, { 
-              color: colors.textSecondary,
-              fontFamily: typography.fontFamily,
-              fontSize: typography.sizes.sm,
-              marginBottom: spacing.sm 
-            }]}>Monthly Expenses (ZAR)</Text>
+          <View style={{ marginBottom: spacing.md }}>
             <Controller
               control={financialForm.control}
               name="monthlyExpenses"
-              render={({ field: { onChange, value } }) => (
-                <TextInput 
-                  style={[styles.input, { 
-                    backgroundColor: colors.background, 
-                    color: colors.text, 
-                    borderColor: colors.border,
-                    fontFamily: typography.fontFamily,
-                    fontSize: typography.sizes.md,
-                    paddingHorizontal: spacing.md,
-                    paddingVertical: spacing.sm,
-                  }]} 
-                  onChangeText={val => onChange(parseInt(val) || 0)} 
-                  value={value?.toString()} 
-                  keyboardType="numeric" 
-                  accessibilityLabel="Monthly Expenses Input"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <Input
+                  label="Monthly Expenses (ZAR)"
+                  placeholder="0"
+                  keyboardType="numeric"
+                  onBlur={onBlur}
+                  onChangeText={(val) => onChange(parseInt(val) || 0)}
+                  value={value?.toString()}
                 />
               )}
             />
           </View>
 
-          <TouchableOpacity 
-            style={[styles.saveButton, { backgroundColor: primary, paddingVertical: spacing.md, marginTop: spacing.sm, marginBottom: spacing.lg }]} 
-            onPress={financialForm.handleSubmit(onFinancialSubmit)} 
-            disabled={isSavingFinancial}
-            accessibilityRole="button"
-            accessibilityLabel="Save Financial Changes"
-          >
-            {isSavingFinancial ? <ActivityIndicator color="#FFF" /> : <Text style={[styles.saveButtonText, { fontFamily: typography.fontFamily, fontSize: typography.sizes.md }]}>Save Changes</Text>}
-          </TouchableOpacity>
+          <CustomButton
+            title="Save Changes"
+            onPress={financialForm.handleSubmit(onFinancialSubmit)}
+            isLoading={isSavingFinancial}
+            style={{ marginTop: spacing.sm, marginBottom: spacing.lg }}
+          />
         </ScrollView>
       </BottomSheet>
 

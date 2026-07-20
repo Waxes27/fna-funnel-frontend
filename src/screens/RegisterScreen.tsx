@@ -1,12 +1,15 @@
 import React from 'react';
-import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 
 import Input from '../components/Input';
 import CustomButton from '../components/Button';
+import { Surface } from '../components/Surface';
+import { Typography } from '../components/Typography';
 import { useAppStore } from '../store/appStore';
+import { useTheme } from '../theme';
 
 // Define the validation schema with Zod
 const registerSchema = z.object({
@@ -21,6 +24,7 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 
 const RegisterScreen = ({ navigation }: any) => {
   const login = useAppStore((state) => state.login);
+  const { colors, layout, spacing } = useTheme();
 
   const {
     control,
@@ -45,116 +49,126 @@ const RegisterScreen = ({ navigation }: any) => {
     login({
       id: 'new-123',
       email: data.email,
-      firstName: data.firstName,
-      lastName: data.lastName,
       role: 'CLIENT',
     });
   };
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.canvas }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.headerContainer}>
-          <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Join Momentum FNA today</Text>
-        </View>
+      <ScrollView contentContainerStyle={[styles.scrollContainer, { padding: spacing.lg }]}>
+        <View style={[styles.inner, { maxWidth: layout.maxWidth }]}>
+          <View style={[styles.headerContainer, { marginBottom: spacing.xl }]}>
+            <Typography variant="h2">Create Account</Typography>
+            <View style={{ height: spacing.xs }} />
+            <Typography variant="body" style={{ color: colors.textSecondary, textAlign: 'center' }}>
+              Join Momentum FNA today.
+            </Typography>
+          </View>
 
-        <View style={styles.formContainer}>
-          <Controller
-            control={control}
-            name="firstName"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <Input
-                label="First Name"
-                placeholder="Enter your first name"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-                error={errors.firstName?.message}
+          <Surface
+            radius="frame"
+            shadow="level2"
+            bordered
+            style={{ backgroundColor: colors.surfaceRaised, padding: spacing.lg }}
+          >
+            <View style={styles.formContainer}>
+              <Controller
+                control={control}
+                name="firstName"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <Input
+                    label="First Name"
+                    placeholder="Enter your first name"
+                    onBlur={onBlur}
+                    onChangeText={onChange}
+                    value={value}
+                    error={errors.firstName?.message}
+                  />
+                )}
               />
-            )}
-          />
 
-          <Controller
-            control={control}
-            name="lastName"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <Input
-                label="Last Name"
-                placeholder="Enter your last name"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-                error={errors.lastName?.message}
+              <Controller
+                control={control}
+                name="lastName"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <Input
+                    label="Last Name"
+                    placeholder="Enter your last name"
+                    onBlur={onBlur}
+                    onChangeText={onChange}
+                    value={value}
+                    error={errors.lastName?.message}
+                  />
+                )}
               />
-            )}
-          />
 
-          <Controller
-            control={control}
-            name="email"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <Input
-                label="Email"
-                placeholder="Enter your email"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-                error={errors.email?.message}
+              <Controller
+                control={control}
+                name="email"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <Input
+                    label="Email"
+                    placeholder="Enter your email"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    onBlur={onBlur}
+                    onChangeText={onChange}
+                    value={value}
+                    error={errors.email?.message}
+                  />
+                )}
               />
-            )}
-          />
 
-          <Controller
-            control={control}
-            name="mobile"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <Input
-                label="Mobile Number"
-                placeholder="Enter your mobile number"
-                keyboardType="phone-pad"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-                error={errors.mobile?.message}
+              <Controller
+                control={control}
+                name="mobile"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <Input
+                    label="Mobile Number"
+                    placeholder="Enter your mobile number"
+                    keyboardType="phone-pad"
+                    onBlur={onBlur}
+                    onChangeText={onChange}
+                    value={value}
+                    error={errors.mobile?.message}
+                  />
+                )}
               />
-            )}
-          />
 
-          <Controller
-            control={control}
-            name="password"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <Input
-                label="Password"
-                placeholder="Create a password (min 8 chars)"
-                secureTextEntry
-                autoCapitalize="none"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-                error={errors.password?.message}
+              <Controller
+                control={control}
+                name="password"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <Input
+                    label="Password"
+                    placeholder="Create a password (min 8 chars)"
+                    secureTextEntry
+                    autoCapitalize="none"
+                    onBlur={onBlur}
+                    onChangeText={onChange}
+                    value={value}
+                    error={errors.password?.message}
+                  />
+                )}
               />
-            )}
-          />
 
-          <CustomButton
-            title="Register"
-            onPress={handleSubmit(onSubmit)}
-            isLoading={isSubmitting}
-            style={styles.registerButton}
-          />
+              <CustomButton
+                title="Register"
+                onPress={handleSubmit(onSubmit)}
+                isLoading={isSubmitting}
+                style={{ marginTop: spacing.md, marginBottom: spacing.sm }}
+              />
 
-          <CustomButton
-            title="Already have an account? Log In"
-            variant="outline"
-            onPress={() => navigation.navigate('Login')}
-          />
+              <CustomButton
+                title="Already have an account? Log In"
+                variant="secondary"
+                onPress={() => navigation.navigate('Login')}
+              />
+            </View>
+          </Surface>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -164,34 +178,20 @@ const RegisterScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   scrollContainer: {
     flexGrow: 1,
     justifyContent: 'center',
-    padding: 24,
-  },
-  headerContainer: {
-    marginBottom: 32,
     alignItems: 'center',
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#003366',
-    marginBottom: 8,
+  inner: {
+    width: '100%',
   },
-  subtitle: {
-    fontSize: 16,
-    color: '#666666',
-    textAlign: 'center',
+  headerContainer: {
+    alignItems: 'center',
   },
   formContainer: {
     width: '100%',
-  },
-  registerButton: {
-    marginTop: 24,
-    marginBottom: 16,
   },
 });
 

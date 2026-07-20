@@ -14,7 +14,7 @@ const HEADER_MAX_HEIGHT = 220;
 const HEADER_MIN_HEIGHT = 90; // Approx safe area + toolbar
 
 export const CollapsibleHeader: React.FC<CollapsibleHeaderProps> = ({ scrollY, fullName, email, onSettingsPress }) => {
-  const { colors, primary, spacing, typography, shadows, layout } = useTheme();
+  const { colors, spacing, typography, shadows, layout } = useTheme();
 
   const headerHeight = scrollY.interpolate({
     inputRange: [0, HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT],
@@ -54,7 +54,7 @@ export const CollapsibleHeader: React.FC<CollapsibleHeaderProps> = ({ scrollY, f
         backgroundColor: colors.headerBackground, 
         borderBottomColor: colors.border 
       },
-      shadows.sm
+      shadows.level1
     ]}>
       <View style={[styles.contentWrapper, { maxWidth: layout.maxWidth }]}>
         <View style={[styles.topBar, { paddingHorizontal: spacing.lg }]}>
@@ -64,10 +64,8 @@ export const CollapsibleHeader: React.FC<CollapsibleHeaderProps> = ({ scrollY, f
             style={[styles.smallTitle, { 
               opacity: headerTitleOpacity, 
               color: colors.text,
-              fontFamily: typography.fontFamily,
-              fontSize: typography.sizes.lg,
-              fontWeight: typography.weights.bold,
-              lineHeight: typography.lineHeights.lg
+              fontFamily: typography.families.primary ?? typography.families.fallback,
+              ...typography.styles.h3
             }]}
             accessibilityRole="header"
             numberOfLines={1}
@@ -102,31 +100,53 @@ export const CollapsibleHeader: React.FC<CollapsibleHeaderProps> = ({ scrollY, f
           accessibilityLabel={`Profile for ${fullName || 'New User'}, ${email}`}
         >
           <View style={[styles.avatarContainer, { marginBottom: spacing.md }]}>
-            <View style={[styles.avatar, { backgroundColor: primary }]}>
-              <Text style={[styles.avatarText, { fontFamily: typography.fontFamily, fontSize: typography.sizes.xxxl }]}>
+            <View style={[styles.avatar, { backgroundColor: colors.ink }]}>
+              <Text
+                style={[
+                  styles.avatarText,
+                  {
+                    color: colors.canvas,
+                    fontFamily: typography.families.primary ?? typography.families.fallback,
+                    ...typography.styles.h2,
+                  },
+                ]}
+              >
                 {fullName ? fullName.charAt(0).toUpperCase() : '?'}
               </Text>
             </View>
-            <View style={[styles.badge, { backgroundColor: colors.success, borderColor: colors.headerBackground }]}>
+            <View style={[styles.badge, { backgroundColor: colors.lightSignalOrange, borderColor: colors.headerBackground }]}>
               <Ionicons name="checkmark-sharp" size={14} color="#FFF" />
             </View>
           </View>
-          <Text style={[styles.name, { 
-            color: colors.text,
-            fontFamily: typography.fontFamily,
-            fontSize: typography.sizes.xl,
-            fontWeight: typography.weights.bold,
-            lineHeight: typography.lineHeights.xl,
-            marginBottom: spacing.xs,
-            textAlign: 'center'
-          }]} numberOfLines={1}>{fullName || 'Complete your profile'}</Text>
-          <Text style={[styles.email, { 
-            color: colors.textSecondary,
-            fontFamily: typography.fontFamily,
-            fontSize: typography.sizes.sm,
-            lineHeight: typography.lineHeights.sm,
-            textAlign: 'center'
-          }]} numberOfLines={1}>{email}</Text>
+          <Text
+            style={[
+              styles.name,
+              {
+                color: colors.text,
+                fontFamily: typography.families.primary ?? typography.families.fallback,
+                ...typography.styles.h3,
+                marginBottom: spacing.xs,
+                textAlign: 'center',
+              },
+            ]}
+            numberOfLines={1}
+          >
+            {fullName || 'Complete your profile'}
+          </Text>
+          <Text
+            style={[
+              styles.email,
+              {
+                color: colors.textSecondary,
+                fontFamily: typography.families.primary ?? typography.families.fallback,
+                ...typography.styles.footerLink,
+                textAlign: 'center',
+              },
+            ]}
+            numberOfLines={1}
+          >
+            {email}
+          </Text>
         </Animated.View>
       </View>
     </Animated.View>
@@ -202,8 +222,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   avatarText: {
-    color: '#FFF',
-    fontWeight: 'bold',
+    includeFontPadding: false,
   },
   badge: {
     position: 'absolute',

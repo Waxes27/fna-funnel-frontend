@@ -38,23 +38,10 @@ describe('ProfileScreen', () => {
     });
     (financialDataService.getFinancialData as jest.Mock).mockResolvedValue({});
 
-    const { getByText, queryByText } = render(<ProfileScreen />);
-    
-    // In our component, we rely on the cachedProfile from useAppStore for instant rendering,
-    // so we need to wait for the loadData effect to trigger setProfile, which we mocked.
-    // Let's trigger the mock implementation to update our mock user profile state.
-    mockSetProfile.mockImplementationOnce((profile) => {
-      (useAppStore as unknown as jest.Mock).mockReturnValue({
-        user: mockUser,
-        profile,
-        setProfile: mockSetProfile,
-        logout: mockLogout,
-      });
-    });
+    render(<ProfileScreen />);
 
     await waitFor(() => {
-      // Re-render essentially by checking if the component updated
-      // We can check if setProfile was called with John Doe
+      expect(profileService.getProfile).toHaveBeenCalledWith(mockUser.id);
       expect(mockSetProfile).toHaveBeenCalledWith(expect.objectContaining({ fullName: 'John Doe' }));
     }, { timeout: 3000 });
   });
