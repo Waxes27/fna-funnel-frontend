@@ -75,7 +75,7 @@ const SetupSummaryScreen: React.FC<SetupSummaryScreenProps> = ({ navigation }) =
   const rows = summaryRows(profileDraft);
 
   return (
-    <OnboardingShell step={16} totalSteps={16}>
+    <OnboardingShell step={13} totalSteps={13}>
       <OnboardingHeader
         eyebrow="You're ready"
         title="Your first financial summary is prepared."

@@ -35,16 +35,16 @@ const WelcomeCarouselScreen: React.FC<WelcomeCarouselScreenProps> = ({ navigatio
   const { colors, spacing } = useTheme();
 
   const handleContinue = () => {
-    setOnboardingStep('signupMethod');
-    navigation.navigate('SignupMethod');
+    setOnboardingStep('goals');
+    navigation.navigate('Goals');
   };
 
   return (
-    <OnboardingShell step={1} totalSteps={16}>
+    <OnboardingShell step={1} totalSteps={13}>
       <OnboardingHeader
         eyebrow="Welcome to Momentum FNA"
         title="Build a financial plan that fits real life."
-        description="Set up your account, verify your email, and unlock a guided experience tailored to your next financial priorities."
+        description="Move straight into a guided experience tailored to your next financial priorities."
       />
 
       <OnboardingCard>

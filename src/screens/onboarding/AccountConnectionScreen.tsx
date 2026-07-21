@@ -50,7 +50,7 @@ const AccountConnectionScreen: React.FC<AccountConnectionScreenProps> = ({ navig
   const { colors, radii, spacing } = useTheme();
 
   return (
-    <OnboardingShell step={15} totalSteps={16}>
+    <OnboardingShell step={12} totalSteps={13}>
       <OnboardingHeader
         eyebrow="Account connection"
         title="Choose how you want to enrich your plan next."

@@ -36,7 +36,7 @@ const ConsentScreen: React.FC<ConsentScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <OnboardingShell step={13} totalSteps={16}>
+    <OnboardingShell step={10} totalSteps={13}>
       <OnboardingHeader
         eyebrow="Client consent"
         title="Review how your onboarding data is used."

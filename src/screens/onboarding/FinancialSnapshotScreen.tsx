@@ -84,7 +84,7 @@ const FinancialSnapshotScreen: React.FC<FinancialSnapshotScreenProps> = ({ navig
   };
 
   return (
-    <OnboardingShell step={11} totalSteps={16}>
+    <OnboardingShell step={8} totalSteps={13}>
       <OnboardingHeader
         eyebrow="Financial snapshot"
         title="Capture the numbers that shape your plan."

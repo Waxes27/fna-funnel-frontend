@@ -1,5 +1,6 @@
 import { Api } from '../../clients/fNAPlatformAPIClient/apis';
 import { handleApiError } from './apiError';
+import { getAuthToken, setAuthToken } from './authTokenStore';
 
 // Constants
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://10.231.178.143:8080';
@@ -12,18 +13,18 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 // Custom fetch implementation with timeout and retry logic
 const customFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
   let attempt = 0;
-  
+
   while (attempt <= MAX_RETRIES) {
     const controller = new AbortController();
-    
+
     // Create timeout using AbortSignal.any if available, or just fallback to our own abort
     const timeoutId = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT);
-    
+
     try {
       // Merge external signal with our timeout signal
-      const signal = init?.signal ? 
-        (AbortSignal as any).any?.([init.signal, controller.signal]) || controller.signal : 
-        controller.signal;
+      const signal = init?.signal
+        ? (AbortSignal as any).any?.([init.signal, controller.signal]) || controller.signal
+        : controller.signal;
 
       const response = await fetch(input, {
         ...init,
@@ -41,11 +42,12 @@ const customFetch = async (input: RequestInfo | URL, init?: RequestInit): Promis
       return response;
     } catch (error: any) {
       clearTimeout(timeoutId);
-      
+
       // Retry on network errors or timeouts
-      const isTransientError = error.name === 'AbortError' || 
-                              error.message?.includes('Network request failed') ||
-                              error.message?.includes('fetch failed');
+      const isTransientError =
+        error.name === 'AbortError' ||
+        error.message?.includes('Network request failed') ||
+        error.message?.includes('fetch failed');
 
       if (isTransientError && attempt < MAX_RETRIES) {
         attempt++;
@@ -77,15 +79,13 @@ export const apiClient = new Api({
 
 // A helper class to manage global token, etc.
 class ApiService {
-  private token: string | null = null;
-
   setToken(token: string | null) {
-    this.token = token;
+    setAuthToken(token);
     apiClient.setSecurityData(token);
   }
 
   getToken() {
-    return this.token;
+    return getAuthToken();
   }
 
   /**

@@ -65,7 +65,7 @@ const RiskQuizScreen: React.FC<RiskQuizScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <OnboardingShell step={12} totalSteps={16}>
+    <OnboardingShell step={9} totalSteps={13}>
       <OnboardingHeader
         eyebrow="Risk profile"
         title="How comfortable are you with investment risk?"

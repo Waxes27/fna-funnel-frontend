@@ -8,16 +8,11 @@ This document maps the complete application navigation flow and user journeys ba
 graph TD
     %% Public / Unauthenticated Flow
     Start((Start)) --> AuthRouter{Authenticated?}
-    AuthRouter -- No --> Welcome[Welcome Carousel]
-    Welcome --> SignupMethod[Sign-up Method]
-    SignupMethod --> EmailSignup[Email Sign-up]
-    SignupMethod --> Login[Login Screen]
-    EmailSignup --> OTP[OTP Verification]
-    Login --> OTP
+    AuthRouter -- No --> Login[Login Screen]
 
     %% Client Onboarding Gateway
-    AuthRouter -- "ROLE_CLIENT + Incomplete Setup" --> Goals[Goals]
-    OTP --> Goals
+    AuthRouter -- "ROLE_CLIENT + Incomplete Setup" --> Welcome[Welcome Carousel]
+    Welcome --> Goals[Goals]
     Goals --> ValueExplainer[Value Explainer]
     ValueExplainer --> LegalName[Legal Name]
     LegalName --> DateOfBirth[Date of Birth]
@@ -85,13 +80,13 @@ graph TD
 ## User Journeys & Navigation Patterns
 
 ### 1. Unauthenticated Journey (Public Flow)
-- **Entry Point:** New users start in the mobile-first welcome carousel rather than a flat landing/login split.
-- **Primary Path:** Welcome -> Sign-up method -> Email sign-up -> OTP verification.
-- **Secondary Path:** Returning users can jump from the sign-up method screen into Login and re-enter the guided setup at the correct authenticated step.
+- **Entry Point:** Unauthenticated users start on the dedicated login screen and continue with Keycloak authentication.
+- **Primary Path:** Login -> authenticated routing.
+- **Secondary Path:** Once authenticated, client users with incomplete setup enter the welcome screen and continue directly into the guided onboarding flow.
 
 ### 2. Client User Journey (`ROLE_CLIENT`)
 - **Onboarding Gate:** Authenticated client users stay inside `OnboardingNavigator` until `isOnboardingComplete` is true.
-- **Guided Setup:** The flow progresses through goals, explanation, identity, contact, household/employment, financial snapshot, risk, consent, notifications, account connection, and summary.
+- **Guided Setup:** The flow progresses through welcome, goals, explanation, identity, contact, household/employment, financial snapshot, risk, consent, notifications, account connection, and summary.
 - **Resume Entry:** If profile data is missing from Home, the dashboard exposes a Continue Setup CTA that reopens onboarding at the first incomplete setup step.
 - **Exploration:** Once setup is complete, clients can branch out to view specific analysis modules (Budget, FNA, Retirement, Estate).
 - **Interactive Tools:** From the Retirement view, users can navigate into the Scenario Simulation Engine. The AI Financial Assistant is accessible directly from the dashboard.

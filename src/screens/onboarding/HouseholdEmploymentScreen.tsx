@@ -106,7 +106,7 @@ const HouseholdEmploymentScreen: React.FC<HouseholdEmploymentScreenProps> = ({ n
   );
 
   return (
-    <OnboardingShell step={10} totalSteps={16}>
+    <OnboardingShell step={7} totalSteps={13}>
       <OnboardingHeader
         eyebrow="Household and work"
         title="Tell us about your current setup."

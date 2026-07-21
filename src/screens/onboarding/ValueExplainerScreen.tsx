@@ -40,7 +40,7 @@ const ValueExplainerScreen: React.FC<ValueExplainerScreenProps> = ({ navigation 
   const { colors, radii, spacing } = useTheme();
 
   return (
-    <OnboardingShell step={6} totalSteps={16}>
+    <OnboardingShell step={3} totalSteps={13}>
       <OnboardingHeader
         eyebrow="Why these questions matter"
         title="We use your answers to tailor the plan."

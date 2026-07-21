@@ -59,7 +59,7 @@ const GoalsScreen: React.FC<GoalsScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <OnboardingShell step={5} totalSteps={16}>
+    <OnboardingShell step={2} totalSteps={13}>
       <OnboardingHeader
         eyebrow="Personalize your plan"
         title="What brought you here?"
@@ -145,7 +145,7 @@ const GoalsScreen: React.FC<GoalsScreenProps> = ({ navigation }) => {
         primaryDisabled={!hasSelection}
         secondaryTitle="Back"
         onSecondaryPress={() => {
-          setOnboardingStep('verifyOtp');
+          setOnboardingStep('welcome');
           navigation.goBack();
         }}
       />

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getAuthToken } from './authTokenStore';
 
 // Ensure the baseURL matches your backend endpoint
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
@@ -14,11 +15,13 @@ const apiClient = axios.create({
 // Request interceptor for API calls
 apiClient.interceptors.request.use(
   async (config) => {
-    // You can inject token here from SecureStore or AsyncStorage
-    // const token = await AsyncStorage.getItem('token');
-    // if (token) {
-    //   config.headers.Authorization = \`Bearer ${token}\`;
-    // }
+    const token = getAuthToken();
+    if (token) {
+      config.headers = {
+        ...config.headers,
+        Authorization: `Bearer ${token}`,
+      };
+    }
     return config;
   },
   (error) => {

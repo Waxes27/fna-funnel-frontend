@@ -1,10 +1,9 @@
 import { create } from 'zustand';
 import { JwtResponse, ClientProfileDTO } from '../../clients/fNAPlatformAPIClient/models';
+import { apiService } from '../services/apiService';
 
 export type OnboardingStep =
   | 'welcome'
-  | 'signupMethod'
-  | 'verifyOtp'
   | 'goals'
   | 'valueExplainer'
   | 'legalName'
@@ -125,6 +124,7 @@ export const useAppStore = create<AppState>((set) => ({
   profileDraft: defaultProfileDraft,
   login: (user) => {
     const requiresOnboarding = user.role === 'CLIENT';
+    apiService.setToken(user.token ?? null);
 
     set({
       isAuthenticated: true,
@@ -134,7 +134,8 @@ export const useAppStore = create<AppState>((set) => ({
       profileDraft: createProfileDraftFromProfile(null, user.email ?? ''),
     });
   },
-  logout: () =>
+  logout: () => {
+    apiService.setToken(null);
     set({
       isAuthenticated: false,
       isOnboardingComplete: false,
@@ -142,7 +143,8 @@ export const useAppStore = create<AppState>((set) => ({
       user: null,
       profile: null,
       profileDraft: defaultProfileDraft,
-    }),
+    });
+  },
   setOnboardingStep: (onboardingStep) => set({ onboardingStep }),
   completeOnboarding: () =>
     set({

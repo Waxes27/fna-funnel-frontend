@@ -53,7 +53,7 @@ const ContactDetailsScreen: React.FC<ContactDetailsScreenProps> = ({ navigation 
   };
 
   return (
-    <OnboardingShell step={9} totalSteps={16}>
+    <OnboardingShell step={6} totalSteps={13}>
       <OnboardingHeader
         eyebrow="Stay connected"
         title="How should we reach you?"

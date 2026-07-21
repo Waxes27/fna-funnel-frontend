@@ -7,15 +7,12 @@ import {
   ConsentScreen,
   ContactDetailsScreen,
   DateOfBirthScreen,
-  EmailSignupScreen,
   FinancialSnapshotScreen,
   GoalsScreen,
   HouseholdEmploymentScreen,
   LegalNameScreen,
   NotificationPromptScreen,
-  OtpVerificationScreen,
   RiskQuizScreen,
-  SignupMethodScreen,
   SetupSummaryScreen,
   ValueExplainerScreen,
   WelcomeCarouselScreen,
@@ -23,9 +20,6 @@ import {
 
 export type OnboardingStackParamList = {
   Welcome: undefined;
-  SignupMethod: undefined;
-  EmailSignup: undefined;
-  VerifyOtp: { email: string };
   Goals: undefined;
   ValueExplainer: undefined;
   LegalName: undefined;
@@ -44,8 +38,6 @@ const Stack = createNativeStackNavigator<OnboardingStackParamList>();
 
 const onboardingStepToRouteName: Record<OnboardingStep, keyof OnboardingStackParamList> = {
   welcome: 'Welcome',
-  signupMethod: 'SignupMethod',
-  verifyOtp: 'VerifyOtp',
   goals: 'Goals',
   valueExplainer: 'ValueExplainer',
   legalName: 'LegalName',
@@ -69,9 +61,6 @@ export const OnboardingNavigator = () => {
       screenOptions={{ headerShown: false }}
     >
       <Stack.Screen name="Welcome" component={WelcomeCarouselScreen} />
-      <Stack.Screen name="SignupMethod" component={SignupMethodScreen} />
-      <Stack.Screen name="EmailSignup" component={EmailSignupScreen} />
-      <Stack.Screen name="VerifyOtp" component={OtpVerificationScreen} />
       <Stack.Screen name="Goals" component={GoalsScreen} />
       <Stack.Screen name="ValueExplainer" component={ValueExplainerScreen} />
       <Stack.Screen name="LegalName" component={LegalNameScreen} />

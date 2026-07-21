@@ -38,7 +38,7 @@ const NotificationPromptScreen: React.FC<NotificationPromptScreenProps> = ({ nav
   const { colors, radii, spacing } = useTheme();
 
   return (
-    <OnboardingShell step={14} totalSteps={16}>
+    <OnboardingShell step={11} totalSteps={13}>
       <OnboardingHeader
         eyebrow="Stay informed"
         title="Choose how Momentum keeps you updated."
