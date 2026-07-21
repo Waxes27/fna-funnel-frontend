@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosHeaders } from 'axios';
 import { getAuthToken } from './authTokenStore';
 
 // Ensure the baseURL matches your backend endpoint
@@ -17,10 +17,9 @@ apiClient.interceptors.request.use(
   async (config) => {
     const token = getAuthToken();
     if (token) {
-      config.headers = {
-        ...config.headers,
-        Authorization: `Bearer ${token}`,
-      };
+      const headers = AxiosHeaders.from(config.headers);
+      headers.set('Authorization', `Bearer ${token}`);
+      config.headers = headers;
     }
     return config;
   },

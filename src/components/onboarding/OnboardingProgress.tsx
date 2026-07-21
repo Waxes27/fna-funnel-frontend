@@ -14,7 +14,7 @@ export const OnboardingProgress: React.FC<OnboardingProgressProps> = ({ step, to
 
   const safeTotalSteps = Math.max(totalSteps, 1);
   const currentStep = Math.min(Math.max(step, 1), safeTotalSteps);
-  const progressWidth = `${(currentStep / safeTotalSteps) * 100}%`;
+  const progressWidth: `${number}%` = `${(currentStep / safeTotalSteps) * 100}%`;
 
   return (
     <View style={styles.container}>

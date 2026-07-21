@@ -110,7 +110,13 @@ export default function ProfileScreen() {
   const onProfileSubmit = async (data: ProfileFormData) => {
     if (!user?.id) return;
     try {
-      const dto: ClientProfileDTO = { ...data, userId: user.id };
+      const dto: ClientProfileDTO = {
+        ...data,
+        userId: user.id,
+        maritalStatus: data.maritalStatus
+          ? (data.maritalStatus as ClientProfileDTO['maritalStatus'])
+          : undefined,
+      };
       const updated = await saveProfile(user.id, dto);
       setProfile(updated);
       setIsEditProfileVisible(false);

@@ -29,7 +29,7 @@ const renderShellChild = (child: React.ReactNode, index: number): React.ReactNod
     );
   }
 
-  if (isValidElement(child)) {
+  if (isValidElement<{ children?: React.ReactNode }>(child)) {
     if (child.type === React.Fragment) {
       return React.Children.map(child.props.children, renderShellChild);
     }
