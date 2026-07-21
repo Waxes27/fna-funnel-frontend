@@ -2,6 +2,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import HomeScreen from '../screens/HomeScreen';
 import ProfileScreen from '../screens/ProfileScreen';
@@ -39,7 +40,9 @@ const TabBarIcon: React.FC<{
 };
 
 const ClientTabNavigator = () => {
-  const { colors, typography } = useTheme();
+  const { colors, spacing, typography } = useTheme();
+  const insets = useSafeAreaInsets();
+  const bottomPadding = Math.max(insets.bottom, spacing.sm);
 
   return (
     <Tab.Navigator
@@ -53,6 +56,8 @@ const ClientTabNavigator = () => {
           backgroundColor: colors.canvas,
           borderTopColor: colors.border,
           borderTopWidth: 1,
+          paddingBottom: bottomPadding,
+          height: 52 + bottomPadding,
           elevation: 0,
         },
         tabBarLabelStyle: {
