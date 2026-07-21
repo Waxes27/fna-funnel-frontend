@@ -5,23 +5,12 @@ import GoalsScreen from '../onboarding/GoalsScreen';
 import { useAppStore } from '../../store/appStore';
 
 const resetAppStore = () => {
+  const existingDraft = useAppStore.getState().profileDraft;
   useAppStore.setState({
     onboardingStep: 'goals',
     profileDraft: {
+      ...existingDraft,
       goals: [],
-      fullName: '',
-      dateOfBirth: '',
-      mobileNumber: '',
-      email: '',
-      residentialAddress: '',
-      maritalStatus: '',
-      numberOfDependants: '',
-      employmentStatus: '',
-      occupation: '',
-      employer: '',
-      annualIncome: '',
-      spouseIncome: '',
-      householdExpenses: '',
     },
   });
 };

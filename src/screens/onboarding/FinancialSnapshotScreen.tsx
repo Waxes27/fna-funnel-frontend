@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import Input from '../../components/Input';
@@ -13,65 +13,30 @@ import { Typography } from '../../components/Typography';
 import { OnboardingStackParamList } from '../../navigation/OnboardingNavigator';
 import { useAppStore } from '../../store/appStore';
 import { useTheme } from '../../theme';
+import { formatEnumLabel, provinceOptions } from './profileDataOptions';
 
 type FinancialSnapshotScreenProps = Pick<
   NativeStackScreenProps<OnboardingStackParamList, 'FinancialSnapshot'>,
   'navigation'
 >;
 
-const formatCurrency = (value: string) => {
-  const amount = Number(value);
-
-  if (!Number.isFinite(amount) || amount <= 0) {
-    return '—';
-  }
-
-  return `R ${amount.toLocaleString('en-ZA')}`;
-};
-
 const FinancialSnapshotScreen: React.FC<FinancialSnapshotScreenProps> = ({ navigation }) => {
   const profileDraft = useAppStore((state) => state.profileDraft);
-  const setProfileDraft = useAppStore((state) => state.setProfileDraft);
+  const setPrimaryApplicantAddressDraft = useAppStore(
+    (state) => state.setPrimaryApplicantAddressDraft,
+  );
   const setOnboardingStep = useAppStore((state) => state.setOnboardingStep);
   const { colors, radii, spacing } = useTheme();
   const [showValidation, setShowValidation] = useState(false);
-
-  const monthlyIncome = profileDraft.monthlyIncome || profileDraft.annualIncome;
-  const monthlyExpenses = profileDraft.monthlyExpenses || profileDraft.householdExpenses;
-  const debtEstimate = profileDraft.debtEstimate;
+  const primaryAddress = profileDraft.primaryApplicant.residentialAddress;
 
   const isValid =
-    monthlyIncome.trim().length > 0 &&
-    monthlyExpenses.trim().length > 0 &&
-    debtEstimate.trim().length > 0;
-
-  const monthlySurplus = useMemo(() => {
-    const income = Number(monthlyIncome || 0);
-    const expenses = Number(monthlyExpenses || 0);
-
-    if (!Number.isFinite(income) || !Number.isFinite(expenses) || income <= 0) {
-      return 'Add your numbers to estimate your free cash flow.';
-    }
-
-    const difference = income - expenses;
-
-    if (difference >= 0) {
-      return `${formatCurrency(String(difference))} estimated monthly surplus`;
-    }
-
-    return `${formatCurrency(String(Math.abs(difference)))} monthly gap to review`;
-  }, [monthlyExpenses, monthlyIncome]);
-
-  const updateNumericField = (
-    key: 'monthlyIncome' | 'monthlyExpenses' | 'debtEstimate',
-    value: string,
-  ) => {
-    setProfileDraft({ [key]: value.replace(/[^\d]/g, '') });
-
-    if (showValidation) {
-      setShowValidation(false);
-    }
-  };
+    primaryAddress.addressLine1.trim().length >= 5 &&
+    primaryAddress.suburb.trim().length > 0 &&
+    primaryAddress.city.trim().length > 0 &&
+    primaryAddress.province.trim().length > 0 &&
+    primaryAddress.postalCode.trim().length >= 4 &&
+    primaryAddress.country.trim().length > 0;
 
   const handleContinue = () => {
     if (!isValid) {
@@ -86,9 +51,9 @@ const FinancialSnapshotScreen: React.FC<FinancialSnapshotScreenProps> = ({ navig
   return (
     <OnboardingShell step={8} totalSteps={13}>
       <OnboardingHeader
-        eyebrow="Financial snapshot"
-        title="Capture the numbers that shape your plan."
-        description="Start with a simple monthly picture so Momentum can surface cash-flow, debt, and affordability guidance in your first summary."
+        eyebrow="Residential address"
+        title="Where does the applicant live?"
+        description="Capture the structured residential address required by the profile model."
       />
 
       <OnboardingCard>
@@ -96,70 +61,172 @@ const FinancialSnapshotScreen: React.FC<FinancialSnapshotScreenProps> = ({ navig
           style={[
             styles.summaryPanel,
             {
-              backgroundColor: colors.ink,
+              backgroundColor: colors.surfaceRaised,
               borderRadius: radii.primary,
+              borderColor: colors.border,
               padding: spacing.md,
             },
           ]}
         >
-          <Typography variant="eyebrow" style={{ color: colors.canvas }}>
-            Quick estimate
+          <Typography variant="eyebrow" withDot>
+            Address model
           </Typography>
           <View style={{ height: spacing.xs }} />
-          <Typography variant="h3" style={{ color: colors.canvas }}>
-            {monthlySurplus}
-          </Typography>
-          <View style={{ height: spacing.sm }} />
-          <Typography variant="body" style={{ color: colors.dustTaupe }}>
-            We use this snapshot to frame early recommendations before deeper account linking and
-            adviser review.
+          <Typography variant="body" style={{ color: colors.textSecondary }}>
+            The model stores street address, suburb, city, province, postal code, and country as
+            separate fields for cleaner downstream processing.
           </Typography>
         </View>
 
         <View style={{ height: spacing.md }} />
 
         <Input
-          label="Monthly income"
-          placeholder="Enter your monthly income"
-          keyboardType="number-pad"
-          value={monthlyIncome}
-          onChangeText={(value) => updateNumericField('monthlyIncome', value)}
+          label="Address line 1"
+          placeholder="Street number and street name"
+          autoCapitalize="words"
+          value={primaryAddress.addressLine1}
+          onChangeText={(value) => {
+            setPrimaryApplicantAddressDraft({ addressLine1: value });
+            if (showValidation && value.trim().length >= 5) {
+              setShowValidation(false);
+            }
+          }}
           error={
-            showValidation && monthlyIncome.trim().length === 0
-              ? 'Enter your monthly income.'
+            showValidation && primaryAddress.addressLine1.trim().length < 5
+              ? 'Enter the primary residential address line.'
               : undefined
           }
         />
 
         <Input
-          label="Monthly expenses"
-          placeholder="Enter your monthly expenses"
-          keyboardType="number-pad"
-          value={monthlyExpenses}
-          onChangeText={(value) => updateNumericField('monthlyExpenses', value)}
+          label="Address line 2"
+          placeholder="Apartment, unit, or estate name"
+          autoCapitalize="words"
+          value={primaryAddress.addressLine2}
+          onChangeText={(value) => setPrimaryApplicantAddressDraft({ addressLine2: value })}
+        />
+
+        <Input
+          label="Suburb"
+          placeholder="Enter the residential suburb"
+          autoCapitalize="words"
+          value={primaryAddress.suburb}
+          onChangeText={(value) => {
+            setPrimaryApplicantAddressDraft({ suburb: value });
+            if (showValidation && value.trim().length > 0) {
+              setShowValidation(false);
+            }
+          }}
           error={
-            showValidation && monthlyExpenses.trim().length === 0
-              ? 'Enter your monthly expenses.'
+            showValidation && primaryAddress.suburb.trim().length === 0
+              ? 'Enter the residential suburb.'
               : undefined
           }
         />
 
         <Input
-          label="Outstanding debt estimate"
-          placeholder="Credit cards, loans, and other debt"
-          keyboardType="number-pad"
-          value={debtEstimate}
-          onChangeText={(value) => updateNumericField('debtEstimate', value)}
+          label="City"
+          placeholder="Enter the city or town"
+          autoCapitalize="words"
+          value={primaryAddress.city}
+          onChangeText={(value) => {
+            setPrimaryApplicantAddressDraft({ city: value });
+            if (showValidation && value.trim().length > 0) {
+              setShowValidation(false);
+            }
+          }}
           error={
-            showValidation && debtEstimate.trim().length === 0
-              ? 'Enter your debt estimate.'
+            showValidation && primaryAddress.city.trim().length === 0
+              ? 'Enter the city or town.'
               : undefined
           }
         />
 
-        <Typography variant="footerLink" style={{ color: colors.textSecondary }}>
-          Use rough values if needed. You can refine these once your accounts are connected.
-        </Typography>
+        <Typography variant="h4">Province</Typography>
+        <View style={{ height: spacing.sm }} />
+        <View style={[styles.optionGrid, { gap: spacing.sm }]}>
+          {provinceOptions.map((option) => {
+            const isSelected = primaryAddress.province === option;
+
+            return (
+              <Pressable
+                key={option}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isSelected }}
+                onPress={() => {
+                  setPrimaryApplicantAddressDraft({ province: option });
+                  if (showValidation) {
+                    setShowValidation(false);
+                  }
+                }}
+                style={({ pressed }) => [
+                  styles.optionChip,
+                  {
+                    borderRadius: radii.primary,
+                    borderColor: isSelected ? colors.ink : colors.border,
+                    backgroundColor: isSelected ? colors.ink : colors.surfaceRaised,
+                    paddingHorizontal: spacing.md,
+                    paddingVertical: spacing.sm,
+                  },
+                  pressed ? styles.optionChipPressed : null,
+                ]}
+              >
+                <Typography
+                  variant="body"
+                  style={{ color: isSelected ? colors.canvas : colors.text }}
+                >
+                  {formatEnumLabel(option)}
+                </Typography>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        {showValidation && primaryAddress.province.trim().length === 0 ? (
+          <View style={{ marginTop: spacing.xs }}>
+            <Typography variant="footerLink" style={{ color: colors.signalOrange }}>
+              Select the residential province.
+            </Typography>
+          </View>
+        ) : null}
+
+        <View style={{ height: spacing.md }} />
+
+        <Input
+          label="Postal code"
+          placeholder="Enter the postal code"
+          keyboardType="number-pad"
+          value={primaryAddress.postalCode}
+          onChangeText={(value) => {
+            setPrimaryApplicantAddressDraft({ postalCode: value.replace(/[^\d]/g, '') });
+            if (showValidation && value.replace(/[^\d]/g, '').length >= 4) {
+              setShowValidation(false);
+            }
+          }}
+          error={
+            showValidation && primaryAddress.postalCode.trim().length < 4
+              ? 'Enter the postal code.'
+              : undefined
+          }
+        />
+
+        <Input
+          label="Country"
+          placeholder="Country of residence"
+          autoCapitalize="words"
+          value={primaryAddress.country}
+          onChangeText={(value) => {
+            setPrimaryApplicantAddressDraft({ country: value });
+            if (showValidation && value.trim().length > 0) {
+              setShowValidation(false);
+            }
+          }}
+          error={
+            showValidation && primaryAddress.country.trim().length === 0
+              ? 'Enter the country of residence.'
+              : undefined
+          }
+        />
       </OnboardingCard>
 
       <OnboardingActionBar
@@ -179,6 +246,18 @@ const FinancialSnapshotScreen: React.FC<FinancialSnapshotScreenProps> = ({ navig
 const styles = StyleSheet.create({
   summaryPanel: {
     width: '100%',
+    borderWidth: 1,
+  },
+  optionGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  optionChip: {
+    borderWidth: 1,
+  },
+  optionChipPressed: {
+    opacity: 0.94,
+    transform: [{ scale: 0.99 }],
   },
 });
 

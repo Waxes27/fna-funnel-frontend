@@ -19,25 +19,42 @@ export type OnboardingStep =
 
 export type AccountConnectionChoice = 'manual' | 'secureLink' | 'later';
 
+export interface OnboardingResidentialAddressDraft {
+  addressLine1: string;
+  addressLine2: string;
+  suburb: string;
+  city: string;
+  province: string;
+  postalCode: string;
+  country: string;
+}
+
+export interface OnboardingApplicantDraft {
+  title: string;
+  firstName: string;
+  surname: string;
+  idNumber: string;
+  gender: string;
+  maritalStatus: string;
+  smokerStatus: string;
+  highestEducationLevel: string;
+  occupation: string;
+  grossMonthlyIncome: string;
+  incomeCurrency: string;
+  emailAddress: string;
+  mobileNumber: string;
+  residentialAddress: OnboardingResidentialAddressDraft;
+}
+
+export interface OnboardingSpouseDraft extends OnboardingApplicantDraft {
+  applicable: boolean;
+  sameAsPrimaryApplicant: boolean;
+}
+
 export interface OnboardingProfileDraft {
   goals: string[];
-  fullName: string;
-  dateOfBirth: string;
-  mobileNumber: string;
-  email: string;
-  residentialAddress: string;
-  maritalStatus: string;
-  numberOfDependants: string;
-  employmentStatus: string;
-  occupation: string;
-  employer: string;
-  annualIncome: string;
-  spouseIncome: string;
-  householdExpenses: string;
-  monthlyIncome: string;
-  monthlyExpenses: string;
-  debtEstimate: string;
-  riskComfort: string;
+  primaryApplicant: OnboardingApplicantDraft;
+  spouse: OnboardingSpouseDraft;
   consentAccepted: boolean;
   notificationsEnabled: boolean;
   accountConnectionChoice: AccountConnectionChoice;
@@ -56,64 +73,102 @@ interface AppState {
   completeOnboarding: () => void;
   setProfile: (profile: ClientProfileDTO) => void;
   setProfileDraft: (patch: Partial<OnboardingProfileDraft>) => void;
+  setPrimaryApplicantDraft: (patch: Partial<OnboardingApplicantDraft>) => void;
+  setPrimaryApplicantAddressDraft: (patch: Partial<OnboardingResidentialAddressDraft>) => void;
+  setSpouseDraft: (patch: Partial<OnboardingSpouseDraft>) => void;
+  setSpouseAddressDraft: (patch: Partial<OnboardingResidentialAddressDraft>) => void;
 }
 
 const defaultOnboardingStep: OnboardingStep = 'welcome';
+
+const defaultResidentialAddressDraft: OnboardingResidentialAddressDraft = {
+  addressLine1: '',
+  addressLine2: '',
+  suburb: '',
+  city: '',
+  province: '',
+  postalCode: '',
+  country: 'South Africa',
+};
+
+const defaultApplicantDraft: OnboardingApplicantDraft = {
+  title: '',
+  firstName: '',
+  surname: '',
+  idNumber: '',
+  gender: '',
+  maritalStatus: '',
+  smokerStatus: '',
+  highestEducationLevel: '',
+  occupation: '',
+  grossMonthlyIncome: '',
+  incomeCurrency: 'ZAR',
+  emailAddress: '',
+  mobileNumber: '',
+  residentialAddress: { ...defaultResidentialAddressDraft },
+};
+
+export const createEmptySpouseDraft = (): OnboardingSpouseDraft => ({
+  applicable: false,
+  sameAsPrimaryApplicant: true,
+  ...defaultApplicantDraft,
+  residentialAddress: { ...defaultResidentialAddressDraft },
+});
+
 const defaultProfileDraft: OnboardingProfileDraft = {
   goals: [],
-  fullName: '',
-  dateOfBirth: '',
-  mobileNumber: '',
-  email: '',
-  residentialAddress: '',
-  maritalStatus: '',
-  numberOfDependants: '',
-  employmentStatus: '',
-  occupation: '',
-  employer: '',
-  annualIncome: '',
-  spouseIncome: '',
-  householdExpenses: '',
-  monthlyIncome: '',
-  monthlyExpenses: '',
-  debtEstimate: '',
-  riskComfort: '',
+  primaryApplicant: {
+    ...defaultApplicantDraft,
+    residentialAddress: { ...defaultResidentialAddressDraft },
+  },
+  spouse: createEmptySpouseDraft(),
   consentAccepted: false,
   notificationsEnabled: false,
   accountConnectionChoice: 'manual',
 };
 
+const splitFullName = (fullName?: string | null) => {
+  const trimmedName = (fullName ?? '').trim();
+  if (!trimmedName) {
+    return { firstName: '', surname: '' };
+  }
+
+  const [firstName, ...rest] = trimmedName.split(/\s+/);
+
+  return {
+    firstName,
+    surname: rest.join(' '),
+  };
+};
+
 const createProfileDraftFromProfile = (
   profile: ClientProfileDTO | null | undefined,
   fallbackEmail = '',
-): OnboardingProfileDraft => ({
-  ...defaultProfileDraft,
-  fullName: profile?.fullName ?? '',
-  dateOfBirth: profile?.dateOfBirth ?? '',
-  mobileNumber: profile?.mobileNumber ?? '',
-  email: profile?.email ?? fallbackEmail,
-  residentialAddress: profile?.residentialAddress ?? '',
-  maritalStatus: profile?.maritalStatus ?? '',
-  numberOfDependants:
-    profile?.numberOfDependants === undefined || profile?.numberOfDependants === null
-      ? ''
-      : String(profile.numberOfDependants),
-  employmentStatus: profile?.employmentStatus ?? '',
-  occupation: profile?.occupation ?? '',
-  employer: profile?.employer ?? '',
-  annualIncome:
-    profile?.annualIncome === undefined || profile?.annualIncome === null
-      ? ''
-      : String(profile.annualIncome),
-  spouseIncome:
-    profile?.spouseIncome === undefined || profile?.spouseIncome === null
-      ? ''
-      : String(profile.spouseIncome),
-  householdExpenses:
-    profile?.householdExpenses === undefined || profile?.householdExpenses === null
-      ? ''
-      : String(profile.householdExpenses),
-});
+) => {
+  const { firstName, surname } = splitFullName(profile?.fullName);
+
+  return {
+    ...defaultProfileDraft,
+    primaryApplicant: {
+      ...defaultApplicantDraft,
+      firstName,
+      surname,
+      idNumber: profile?.idNumber ?? '',
+      maritalStatus: profile?.maritalStatus ?? '',
+      occupation: profile?.occupation ?? '',
+      grossMonthlyIncome:
+        profile?.annualIncome === undefined || profile?.annualIncome === null
+          ? ''
+          : String(profile.annualIncome),
+      emailAddress: profile?.email ?? fallbackEmail,
+      mobileNumber: profile?.mobileNumber ?? '',
+      residentialAddress: {
+        ...defaultResidentialAddressDraft,
+        addressLine1: profile?.residentialAddress ?? '',
+      },
+    },
+  };
+};
 
 export const useAppStore = create<AppState>((set) => ({
   isAuthenticated: false,
@@ -131,6 +186,7 @@ export const useAppStore = create<AppState>((set) => ({
       isOnboardingComplete: !requiresOnboarding,
       onboardingStep: requiresOnboarding ? defaultOnboardingStep : 'summary',
       user,
+      profile: null,
       profileDraft: createProfileDraftFromProfile(null, user.email ?? ''),
     });
   },
@@ -157,10 +213,7 @@ export const useAppStore = create<AppState>((set) => ({
       profileDraft: {
         ...createProfileDraftFromProfile(profile, state.user?.email ?? ''),
         goals: state.profileDraft.goals,
-        monthlyIncome: state.profileDraft.monthlyIncome,
-        monthlyExpenses: state.profileDraft.monthlyExpenses,
-        debtEstimate: state.profileDraft.debtEstimate,
-        riskComfort: state.profileDraft.riskComfort,
+        spouse: state.profileDraft.spouse,
         consentAccepted: state.profileDraft.consentAccepted,
         notificationsEnabled: state.profileDraft.notificationsEnabled,
         accountConnectionChoice: state.profileDraft.accountConnectionChoice,
@@ -171,6 +224,52 @@ export const useAppStore = create<AppState>((set) => ({
       profileDraft: {
         ...state.profileDraft,
         ...patch,
+      },
+    })),
+  setPrimaryApplicantDraft: (patch) =>
+    set((state) => ({
+      profileDraft: {
+        ...state.profileDraft,
+        primaryApplicant: {
+          ...state.profileDraft.primaryApplicant,
+          ...patch,
+        },
+      },
+    })),
+  setPrimaryApplicantAddressDraft: (patch) =>
+    set((state) => ({
+      profileDraft: {
+        ...state.profileDraft,
+        primaryApplicant: {
+          ...state.profileDraft.primaryApplicant,
+          residentialAddress: {
+            ...state.profileDraft.primaryApplicant.residentialAddress,
+            ...patch,
+          },
+        },
+      },
+    })),
+  setSpouseDraft: (patch) =>
+    set((state) => ({
+      profileDraft: {
+        ...state.profileDraft,
+        spouse: {
+          ...state.profileDraft.spouse,
+          ...patch,
+        },
+      },
+    })),
+  setSpouseAddressDraft: (patch) =>
+    set((state) => ({
+      profileDraft: {
+        ...state.profileDraft,
+        spouse: {
+          ...state.profileDraft.spouse,
+          residentialAddress: {
+            ...state.profileDraft.spouse.residentialAddress,
+            ...patch,
+          },
+        },
       },
     })),
 }));

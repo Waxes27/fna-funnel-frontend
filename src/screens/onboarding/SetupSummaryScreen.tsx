@@ -12,6 +12,7 @@ import { Typography } from '../../components/Typography';
 import { OnboardingStackParamList } from '../../navigation/OnboardingNavigator';
 import { useAppStore } from '../../store/appStore';
 import { useTheme } from '../../theme';
+import { formatEnumLabel } from './profileDataOptions';
 
 type SetupSummaryScreenProps = Pick<
   NativeStackScreenProps<OnboardingStackParamList, 'SetupSummary'>,
@@ -27,6 +28,30 @@ const formatCurrency = (value: string) => {
 
   return `R ${amount.toLocaleString('en-ZA')}`;
 };
+
+const formatFullName = (firstName: string, surname: string) =>
+  [firstName, surname].filter(Boolean).join(' ').trim();
+
+const formatAddress = (address: {
+  addressLine1: string;
+  addressLine2: string;
+  suburb: string;
+  city: string;
+  province: string;
+  postalCode: string;
+  country: string;
+}) =>
+  [
+    address.addressLine1,
+    address.addressLine2,
+    address.suburb,
+    address.city,
+    address.province ? formatEnumLabel(address.province) : '',
+    address.postalCode,
+    address.country,
+  ]
+    .filter(Boolean)
+    .join(', ');
 
 const formatConnectionChoice = (value: string) => {
   switch (value) {
@@ -45,20 +70,79 @@ const summaryRows = (profileDraft: ReturnType<typeof useAppStore.getState>['prof
     value: profileDraft.goals.length > 0 ? profileDraft.goals.join(' • ') : 'No goals selected',
   },
   {
-    label: 'Monthly income',
-    value: formatCurrency(profileDraft.monthlyIncome || profileDraft.annualIncome),
+    label: 'Applicant name',
+    value:
+      formatFullName(
+        profileDraft.primaryApplicant.firstName,
+        profileDraft.primaryApplicant.surname,
+      ) || 'Not added yet',
   },
   {
-    label: 'Monthly expenses',
-    value: formatCurrency(profileDraft.monthlyExpenses || profileDraft.householdExpenses),
+    label: 'Applicant identity',
+    value: profileDraft.primaryApplicant.idNumber || 'Not added yet',
   },
   {
-    label: 'Debt estimate',
-    value: formatCurrency(profileDraft.debtEstimate),
+    label: 'Applicant profile',
+    value:
+      [
+        profileDraft.primaryApplicant.title
+          ? formatEnumLabel(profileDraft.primaryApplicant.title)
+          : '',
+        profileDraft.primaryApplicant.gender
+          ? formatEnumLabel(profileDraft.primaryApplicant.gender)
+          : '',
+        profileDraft.primaryApplicant.smokerStatus
+          ? formatEnumLabel(profileDraft.primaryApplicant.smokerStatus)
+          : '',
+      ]
+        .filter(Boolean)
+        .join(' • ') || 'Not added yet',
   },
   {
-    label: 'Risk comfort',
-    value: profileDraft.riskComfort || 'Not selected',
+    label: 'Applicant education',
+    value: profileDraft.primaryApplicant.highestEducationLevel
+      ? formatEnumLabel(profileDraft.primaryApplicant.highestEducationLevel)
+      : 'Not added yet',
+  },
+  {
+    label: 'Applicant contact',
+    value:
+      [profileDraft.primaryApplicant.emailAddress, profileDraft.primaryApplicant.mobileNumber]
+        .filter(Boolean)
+        .join(' • ') || 'Not added yet',
+  },
+  {
+    label: 'Applicant employment',
+    value:
+      [
+        profileDraft.primaryApplicant.maritalStatus
+          ? formatEnumLabel(profileDraft.primaryApplicant.maritalStatus)
+          : '',
+        profileDraft.primaryApplicant.occupation,
+        profileDraft.primaryApplicant.grossMonthlyIncome
+          ? `${formatCurrency(profileDraft.primaryApplicant.grossMonthlyIncome)} gross monthly`
+          : '',
+      ]
+        .filter(Boolean)
+        .join(' • ') || 'Not added yet',
+  },
+  {
+    label: 'Applicant address',
+    value: formatAddress(profileDraft.primaryApplicant.residentialAddress) || 'Not added yet',
+  },
+  {
+    label: 'Spouse profile',
+    value: profileDraft.spouse.applicable
+      ? formatFullName(profileDraft.spouse.firstName, profileDraft.spouse.surname) || 'Pending'
+      : 'Not required',
+  },
+  {
+    label: 'Spouse address',
+    value: !profileDraft.spouse.applicable
+      ? 'Not required'
+      : profileDraft.spouse.sameAsPrimaryApplicant
+        ? 'Same as applicant'
+        : formatAddress(profileDraft.spouse.residentialAddress) || 'Pending',
   },
   {
     label: 'Account connection',
@@ -98,7 +182,11 @@ const SetupSummaryScreen: React.FC<SetupSummaryScreenProps> = ({ navigation }) =
           </Typography>
           <View style={{ height: spacing.xs }} />
           <Typography variant="h3" style={{ color: colors.canvas }}>
-            {profileDraft.fullName || 'Your Momentum profile'} is ready for the main app.
+            {formatFullName(
+              profileDraft.primaryApplicant.firstName,
+              profileDraft.primaryApplicant.surname,
+            ) || 'Your Momentum profile'}{' '}
+            is ready for the main app.
           </Typography>
           <View style={{ height: spacing.sm }} />
           <Typography variant="body" style={{ color: colors.dustTaupe }}>

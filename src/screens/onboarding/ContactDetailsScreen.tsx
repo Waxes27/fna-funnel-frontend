@@ -23,24 +23,21 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const ContactDetailsScreen: React.FC<ContactDetailsScreenProps> = ({ navigation }) => {
   const profileDraft = useAppStore((state) => state.profileDraft);
-  const setProfileDraft = useAppStore((state) => state.setProfileDraft);
+  const setPrimaryApplicantDraft = useAppStore((state) => state.setPrimaryApplicantDraft);
   const setOnboardingStep = useAppStore((state) => state.setOnboardingStep);
   const { colors, radii, spacing } = useTheme();
   const [showValidation, setShowValidation] = useState(false);
+  const primaryApplicant = profileDraft.primaryApplicant;
 
   const isEmailValid = useMemo(
-    () => emailPattern.test(profileDraft.email.trim()),
-    [profileDraft.email],
+    () => emailPattern.test(primaryApplicant.emailAddress.trim()),
+    [primaryApplicant.emailAddress],
   );
   const isPhoneValid = useMemo(
-    () => profileDraft.mobileNumber.replace(/\D/g, '').length >= 10,
-    [profileDraft.mobileNumber],
+    () => /^\+\d{10,15}$/.test(primaryApplicant.mobileNumber.trim()),
+    [primaryApplicant.mobileNumber],
   );
-  const isAddressValid = useMemo(
-    () => profileDraft.residentialAddress.trim().length >= 8,
-    [profileDraft.residentialAddress],
-  );
-  const isValid = isEmailValid && isPhoneValid && isAddressValid;
+  const isValid = isEmailValid && isPhoneValid;
 
   const handleContinue = () => {
     if (!isValid) {
@@ -77,8 +74,8 @@ const ContactDetailsScreen: React.FC<ContactDetailsScreenProps> = ({ navigation 
           </Typography>
           <View style={{ height: spacing.xs }} />
           <Typography variant="body" style={{ color: colors.textSecondary }}>
-            We store your email, mobile number, and residential address for future reviews and
-            follow-up.
+            We store the applicant email address and mobile number in international format for
+            profile updates and adviser follow-up.
           </Typography>
         </View>
 
@@ -86,18 +83,18 @@ const ContactDetailsScreen: React.FC<ContactDetailsScreenProps> = ({ navigation 
 
         <Input
           label="Mobile number"
-          placeholder="Enter your mobile number"
+          placeholder="+27821234567"
           keyboardType="phone-pad"
-          value={profileDraft.mobileNumber}
+          value={primaryApplicant.mobileNumber}
           onChangeText={(value) => {
-            setProfileDraft({ mobileNumber: value });
-            if (showValidation && value.replace(/\D/g, '').length >= 10) {
+            setPrimaryApplicantDraft({ mobileNumber: value });
+            if (showValidation && /^\+\d{10,15}$/.test(value.trim())) {
               setShowValidation(false);
             }
           }}
           error={
             showValidation && !isPhoneValid
-              ? 'Enter a mobile number with at least 10 digits.'
+              ? 'Enter the mobile number in international format, for example +27821234567.'
               : undefined
           }
         />
@@ -108,34 +105,14 @@ const ContactDetailsScreen: React.FC<ContactDetailsScreenProps> = ({ navigation 
           keyboardType="email-address"
           autoCapitalize="none"
           autoCorrect={false}
-          value={profileDraft.email}
+          value={primaryApplicant.emailAddress}
           onChangeText={(value) => {
-            setProfileDraft({ email: value });
+            setPrimaryApplicantDraft({ emailAddress: value });
             if (showValidation && emailPattern.test(value.trim())) {
               setShowValidation(false);
             }
           }}
           error={showValidation && !isEmailValid ? 'Enter a valid email address.' : undefined}
-        />
-
-        <Input
-          label="Residential address"
-          placeholder="Enter your residential address"
-          autoCapitalize="words"
-          multiline
-          value={profileDraft.residentialAddress}
-          onChangeText={(value) => {
-            setProfileDraft({ residentialAddress: value });
-            if (showValidation && value.trim().length >= 8) {
-              setShowValidation(false);
-            }
-          }}
-          error={
-            showValidation && !isAddressValid
-              ? 'Enter the address you want saved to your profile.'
-              : undefined
-          }
-          style={styles.addressInput}
         />
       </OnboardingCard>
 
@@ -156,10 +133,6 @@ const ContactDetailsScreen: React.FC<ContactDetailsScreenProps> = ({ navigation 
 const styles = {
   noticePanel: {
     borderWidth: 1,
-  },
-  addressInput: {
-    minHeight: 96,
-    textAlignVertical: 'top' as const,
   },
 };
 

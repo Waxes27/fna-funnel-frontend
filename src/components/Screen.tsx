@@ -13,7 +13,9 @@ export const Screen: React.FC<ScreenProps> = ({ style, children, ...props }) => 
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: colors.canvas }, style]} {...props}>
       <View style={styles.center}>
-        <View style={[styles.content, { maxWidth: layout.maxWidth, paddingHorizontal: spacing.lg }]}>
+        <View
+          style={[styles.content, { maxWidth: layout.maxWidth, paddingHorizontal: spacing.lg }]}
+        >
           {children}
         </View>
       </View>
@@ -31,7 +33,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   content: {
+    flex: 1,
     width: '100%',
   },
 });
-

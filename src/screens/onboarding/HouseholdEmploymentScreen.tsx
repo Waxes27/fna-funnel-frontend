@@ -11,40 +11,40 @@ import {
 } from '../../components/onboarding';
 import { Typography } from '../../components/Typography';
 import { OnboardingStackParamList } from '../../navigation/OnboardingNavigator';
-import { useAppStore } from '../../store/appStore';
+import { createEmptySpouseDraft, useAppStore } from '../../store/appStore';
 import { useTheme } from '../../theme';
+import { formatEnumLabel, maritalStatusOptions } from './profileDataOptions';
 
 type HouseholdEmploymentScreenProps = Pick<
   NativeStackScreenProps<OnboardingStackParamList, 'HouseholdEmployment'>,
   'navigation'
 >;
 
-const maritalStatusOptions = ['Single', 'Married', 'Partnered', 'Divorced'];
-const employmentStatusOptions = ['Employed', 'Self-employed', 'Unemployed', 'Retired'];
-
 const HouseholdEmploymentScreen: React.FC<HouseholdEmploymentScreenProps> = ({ navigation }) => {
   const profileDraft = useAppStore((state) => state.profileDraft);
   const setProfileDraft = useAppStore((state) => state.setProfileDraft);
+  const setPrimaryApplicantDraft = useAppStore((state) => state.setPrimaryApplicantDraft);
+  const setSpouseDraft = useAppStore((state) => state.setSpouseDraft);
   const setOnboardingStep = useAppStore((state) => state.setOnboardingStep);
   const { colors, radii, spacing } = useTheme();
   const [showValidation, setShowValidation] = useState(false);
+  const primaryApplicant = profileDraft.primaryApplicant;
 
-  const isMaritalStatusValid = profileDraft.maritalStatus.trim().length > 0;
-  const isEmploymentStatusValid = profileDraft.employmentStatus.trim().length > 0;
-  const isDependantsValid = profileDraft.numberOfDependants.trim().length > 0;
-  const isOccupationValid =
-    profileDraft.employmentStatus === 'Unemployed'
-      ? true
-      : profileDraft.occupation.trim().length > 0 && profileDraft.annualIncome.trim().length > 0;
-  const isValid =
-    isMaritalStatusValid && isEmploymentStatusValid && isDependantsValid && isOccupationValid;
+  const isMaritalStatusValid = primaryApplicant.maritalStatus.trim().length > 0;
+  const isOccupationValid = primaryApplicant.occupation.trim().length > 0;
+  const isIncomeValid = /^\d+$/.test(primaryApplicant.grossMonthlyIncome.trim());
+  const isValid = isMaritalStatusValid && isOccupationValid && isIncomeValid;
 
-  const householdSnapshot = useMemo(() => {
-    const dependants = profileDraft.numberOfDependants || '0';
-    const employment = profileDraft.employmentStatus || 'Pending';
+  const employmentSnapshot = useMemo(() => {
+    const income = primaryApplicant.grossMonthlyIncome
+      ? `R ${Number(primaryApplicant.grossMonthlyIncome).toLocaleString('en-ZA')}`
+      : 'Pending income';
+    const maritalStatus = primaryApplicant.maritalStatus
+      ? formatEnumLabel(primaryApplicant.maritalStatus)
+      : 'Pending marital status';
 
-    return `${dependants} dependant${dependants === '1' ? '' : 's'} • ${employment}`;
-  }, [profileDraft.employmentStatus, profileDraft.numberOfDependants]);
+    return `${maritalStatus} • ${income}`;
+  }, [primaryApplicant.grossMonthlyIncome, primaryApplicant.maritalStatus]);
 
   const handleContinue = () => {
     if (!isValid) {
@@ -58,9 +58,8 @@ const HouseholdEmploymentScreen: React.FC<HouseholdEmploymentScreenProps> = ({ n
 
   const renderSelectableOptions = (
     label: string,
-    options: string[],
+    options: readonly string[],
     selectedValue: string,
-    draftKey: 'maritalStatus' | 'employmentStatus',
   ) => (
     <View>
       <Typography variant="h4">{label}</Typography>
@@ -75,7 +74,16 @@ const HouseholdEmploymentScreen: React.FC<HouseholdEmploymentScreenProps> = ({ n
               accessibilityRole="button"
               accessibilityState={{ selected: isSelected }}
               onPress={() => {
-                setProfileDraft({ [draftKey]: option });
+                setPrimaryApplicantDraft({ maritalStatus: option });
+                if (option === 'MARRIED') {
+                  setSpouseDraft({
+                    applicable: true,
+                    maritalStatus: 'MARRIED',
+                    incomeCurrency: 'ZAR',
+                  });
+                } else {
+                  setProfileDraft({ spouse: createEmptySpouseDraft() });
+                }
                 if (showValidation) {
                   setShowValidation(false);
                 }
@@ -96,7 +104,7 @@ const HouseholdEmploymentScreen: React.FC<HouseholdEmploymentScreenProps> = ({ n
                 variant="body"
                 style={{ color: isSelected ? colors.canvas : colors.text }}
               >
-                {option}
+                {formatEnumLabel(option)}
               </Typography>
             </Pressable>
           );
@@ -125,12 +133,12 @@ const HouseholdEmploymentScreen: React.FC<HouseholdEmploymentScreenProps> = ({ n
           </Typography>
           <View style={{ height: spacing.xs }} />
           <Typography variant="h3" style={{ color: colors.canvas }}>
-            {householdSnapshot}
+            {employmentSnapshot}
           </Typography>
           <View style={{ height: spacing.sm }} />
           <Typography variant="body" style={{ color: colors.dustTaupe }}>
-            Add the household and employment details that influence budgeting, protection, and
-            affordability guidance.
+            Add the applicant marital status, occupation, and gross monthly income required by the
+            profile model.
           </Typography>
         </View>
 
@@ -139,100 +147,65 @@ const HouseholdEmploymentScreen: React.FC<HouseholdEmploymentScreenProps> = ({ n
         {renderSelectableOptions(
           'Marital status',
           maritalStatusOptions,
-          profileDraft.maritalStatus,
-          'maritalStatus',
+          primaryApplicant.maritalStatus,
         )}
 
         <View style={{ height: spacing.md }} />
-
-        {renderSelectableOptions(
-          'Employment status',
-          employmentStatusOptions,
-          profileDraft.employmentStatus,
-          'employmentStatus',
-        )}
-
-        <View style={{ height: spacing.md }} />
-
-        <Input
-          label="Number of dependants"
-          placeholder="0"
-          keyboardType="number-pad"
-          value={profileDraft.numberOfDependants}
-          onChangeText={(value) => {
-            setProfileDraft({ numberOfDependants: value.replace(/[^\d]/g, '') });
-            if (showValidation && value.replace(/[^\d]/g, '').length > 0) {
-              setShowValidation(false);
-            }
-          }}
-          error={
-            showValidation && !isDependantsValid
-              ? 'Enter the number of dependants in your household.'
-              : undefined
-          }
-        />
 
         <Input
           label="Occupation"
-          placeholder="Enter your occupation"
+          placeholder="Enter the applicant occupation"
           autoCapitalize="words"
-          value={profileDraft.occupation}
+          value={primaryApplicant.occupation}
           onChangeText={(value) => {
-            setProfileDraft({ occupation: value });
+            setPrimaryApplicantDraft({ occupation: value });
             if (showValidation && value.trim().length > 0) {
               setShowValidation(false);
             }
           }}
           error={
-            showValidation && !isOccupationValid && profileDraft.employmentStatus !== 'Unemployed'
-              ? 'Enter your occupation.'
-              : undefined
+            showValidation && !isOccupationValid ? 'Enter the applicant occupation.' : undefined
           }
         />
 
         <Input
-          label="Employer"
-          placeholder="Enter your employer"
-          autoCapitalize="words"
-          value={profileDraft.employer}
-          onChangeText={(value) => setProfileDraft({ employer: value })}
-        />
-
-        <Input
-          label="Annual income"
-          placeholder="Enter your annual income"
+          label="Gross monthly income"
+          placeholder="Enter the gross monthly income in ZAR"
           keyboardType="number-pad"
-          value={profileDraft.annualIncome}
+          value={primaryApplicant.grossMonthlyIncome}
           onChangeText={(value) => {
-            setProfileDraft({ annualIncome: value.replace(/[^\d]/g, '') });
+            setPrimaryApplicantDraft({
+              grossMonthlyIncome: value.replace(/[^\d]/g, ''),
+              incomeCurrency: 'ZAR',
+            });
             if (showValidation && value.replace(/[^\d]/g, '').length > 0) {
               setShowValidation(false);
             }
           }}
           error={
-            showValidation && !isOccupationValid && profileDraft.employmentStatus !== 'Unemployed'
-              ? 'Enter your annual income.'
+            showValidation && !isIncomeValid
+              ? 'Enter the gross monthly income as a whole number.'
               : undefined
           }
         />
 
-        <Input
-          label="Spouse income"
-          placeholder="Optional"
-          keyboardType="number-pad"
-          value={profileDraft.spouseIncome}
-          onChangeText={(value) => setProfileDraft({ spouseIncome: value.replace(/[^\d]/g, '') })}
-        />
-
-        <Input
-          label="Household expenses"
-          placeholder="Optional"
-          keyboardType="number-pad"
-          value={profileDraft.householdExpenses}
-          onChangeText={(value) =>
-            setProfileDraft({ householdExpenses: value.replace(/[^\d]/g, '') })
-          }
-        />
+        <View
+          style={[
+            styles.currencyPanel,
+            {
+              backgroundColor: colors.surfaceRaised,
+              borderColor: colors.border,
+              borderRadius: radii.primary,
+              padding: spacing.md,
+            },
+          ]}
+        >
+          <Typography variant="h4">Income currency</Typography>
+          <View style={{ height: spacing.xs }} />
+          <Typography variant="body" style={{ color: colors.textSecondary }}>
+            This onboarding flow defaults the applicant income currency to ZAR.
+          </Typography>
+        </View>
       </OnboardingCard>
 
       <OnboardingActionBar
@@ -252,6 +225,10 @@ const HouseholdEmploymentScreen: React.FC<HouseholdEmploymentScreenProps> = ({ n
 const styles = StyleSheet.create({
   summaryPanel: {
     width: '100%',
+  },
+  currencyPanel: {
+    width: '100%',
+    borderWidth: 1,
   },
   optionGrid: {
     flexDirection: 'row',

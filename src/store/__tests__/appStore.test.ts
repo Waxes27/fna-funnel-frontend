@@ -33,6 +33,9 @@ describe('appStore onboarding state', () => {
     expect(useAppStore.getState().isOnboardingComplete).toBe(false);
     expect(useAppStore.getState().onboardingStep).toBe('welcome');
     expect(apiService.getToken()).toBe('client-token');
+    expect(useAppStore.getState().profileDraft.primaryApplicant.emailAddress).toBe(
+      'test@example.com',
+    );
   });
 
   it('can advance and complete onboarding', () => {

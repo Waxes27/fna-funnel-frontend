@@ -13,44 +13,79 @@ const getResumeOnboardingStep = (profileDraft: OnboardingProfileDraft): Onboardi
     return 'goals';
   }
 
-  if (!profileDraft.fullName.trim()) {
+  const primaryApplicantNameComplete =
+    profileDraft.primaryApplicant.title.trim().length > 0 &&
+    profileDraft.primaryApplicant.firstName.trim().length >= 2 &&
+    profileDraft.primaryApplicant.surname.trim().length >= 2;
+
+  if (!primaryApplicantNameComplete) {
     return 'legalName';
   }
 
-  if (!profileDraft.dateOfBirth.trim()) {
+  const primaryApplicantIdentityComplete =
+    profileDraft.primaryApplicant.idNumber.trim().length >= 5 &&
+    profileDraft.primaryApplicant.gender.trim().length > 0 &&
+    profileDraft.primaryApplicant.smokerStatus.trim().length > 0 &&
+    profileDraft.primaryApplicant.highestEducationLevel.trim().length > 0;
+
+  if (!primaryApplicantIdentityComplete) {
     return 'dateOfBirth';
   }
 
   const hasContactDetails =
-    profileDraft.mobileNumber.replace(/\D/g, '').length >= 10 &&
-    profileDraft.email.trim().length > 0 &&
-    profileDraft.residentialAddress.trim().length >= 8;
+    /^\+\d{10,15}$/.test(profileDraft.primaryApplicant.mobileNumber.trim()) &&
+    profileDraft.primaryApplicant.emailAddress.trim().length > 0;
 
   if (!hasContactDetails) {
     return 'contactDetails';
   }
 
-  const hasHouseholdDetails =
-    profileDraft.maritalStatus.trim().length > 0 &&
-    profileDraft.numberOfDependants.trim().length > 0 &&
-    profileDraft.employmentStatus.trim().length > 0 &&
-    (profileDraft.employmentStatus === 'Unemployed' ||
-      (profileDraft.occupation.trim().length > 0 && profileDraft.annualIncome.trim().length > 0));
+  const hasEmploymentDetails =
+    profileDraft.primaryApplicant.maritalStatus.trim().length > 0 &&
+    profileDraft.primaryApplicant.occupation.trim().length > 0 &&
+    /^\d+$/.test(profileDraft.primaryApplicant.grossMonthlyIncome.trim());
 
-  if (!hasHouseholdDetails) {
+  if (!hasEmploymentDetails) {
     return 'householdEmployment';
   }
 
-  const hasFinancialSnapshot =
-    profileDraft.monthlyIncome.trim().length > 0 &&
-    profileDraft.monthlyExpenses.trim().length > 0 &&
-    profileDraft.debtEstimate.trim().length > 0;
+  const primaryAddress = profileDraft.primaryApplicant.residentialAddress;
+  const hasPrimaryAddress =
+    primaryAddress.addressLine1.trim().length >= 5 &&
+    primaryAddress.suburb.trim().length > 0 &&
+    primaryAddress.city.trim().length > 0 &&
+    primaryAddress.province.trim().length > 0 &&
+    primaryAddress.postalCode.trim().length >= 4 &&
+    primaryAddress.country.trim().length > 0;
 
-  if (!hasFinancialSnapshot) {
+  if (!hasPrimaryAddress) {
     return 'financialSnapshot';
   }
 
-  if (!profileDraft.riskComfort.trim()) {
+  const spouseRequired = profileDraft.primaryApplicant.maritalStatus === 'MARRIED';
+  const spouseAddress = profileDraft.spouse.residentialAddress;
+  const spouseComplete =
+    !spouseRequired ||
+    (profileDraft.spouse.title.trim().length > 0 &&
+      profileDraft.spouse.firstName.trim().length >= 2 &&
+      profileDraft.spouse.surname.trim().length >= 2 &&
+      profileDraft.spouse.idNumber.trim().length >= 5 &&
+      profileDraft.spouse.gender.trim().length > 0 &&
+      profileDraft.spouse.smokerStatus.trim().length > 0 &&
+      profileDraft.spouse.highestEducationLevel.trim().length > 0 &&
+      profileDraft.spouse.occupation.trim().length > 0 &&
+      /^\d+$/.test(profileDraft.spouse.grossMonthlyIncome.trim()) &&
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profileDraft.spouse.emailAddress.trim()) &&
+      /^\+\d{10,15}$/.test(profileDraft.spouse.mobileNumber.trim()) &&
+      (profileDraft.spouse.sameAsPrimaryApplicant ||
+        (spouseAddress.addressLine1.trim().length >= 5 &&
+          spouseAddress.suburb.trim().length > 0 &&
+          spouseAddress.city.trim().length > 0 &&
+          spouseAddress.province.trim().length > 0 &&
+          spouseAddress.postalCode.trim().length >= 4 &&
+          spouseAddress.country.trim().length > 0)));
+
+  if (!spouseComplete) {
     return 'riskQuiz';
   }
 

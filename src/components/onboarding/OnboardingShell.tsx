@@ -1,5 +1,13 @@
 import React, { PropsWithChildren, isValidElement } from 'react';
-import { ScrollView, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleProp,
+  StyleSheet,
+  View,
+  ViewStyle,
+} from 'react-native';
 
 import { useTheme } from '../../theme';
 import { Screen } from '../Screen';
@@ -42,27 +50,37 @@ export const OnboardingShell: React.FC<OnboardingShellProps> = ({
 
   return (
     <Screen>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={[
-          styles.contentContainer,
-          { paddingVertical: spacing.lg },
-          contentContainerStyle,
-        ]}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View style={[styles.stack, { gap: spacing.lg }]}>
-          <OnboardingProgress step={step} totalSteps={totalSteps} />
-          {React.Children.map(children, renderShellChild)}
-        </View>
-      </ScrollView>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={[
+            styles.contentContainer,
+            { paddingTop: spacing.lg, paddingBottom: spacing.xxl },
+            contentContainerStyle,
+          ]}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={[styles.stack, { gap: spacing.lg }]}>
+            <OnboardingProgress step={step} totalSteps={totalSteps} />
+            {React.Children.map(children, renderShellChild)}
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </Screen>
   );
 };
 
 const styles = StyleSheet.create({
+  keyboardAvoidingView: {
+    flex: 1,
+  },
   scrollView: {
+    flex: 1,
     width: '100%',
   },
   contentContainer: {
