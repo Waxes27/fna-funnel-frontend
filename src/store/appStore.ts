@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { JwtResponse, ClientProfileDTO } from '../../clients/fNAPlatformAPIClient/models';
 import { apiService } from '../services/apiService';
+import { clearPersistedAuthSession } from '../services/authSessionStore';
 
 export type OnboardingStep =
   | 'welcome'
@@ -62,6 +63,7 @@ export interface OnboardingProfileDraft {
 
 interface AppState {
   isAuthenticated: boolean;
+  isAuthBootstrapping: boolean;
   isOnboardingComplete: boolean;
   onboardingStep: OnboardingStep;
   user: JwtResponse | null;
@@ -69,6 +71,8 @@ interface AppState {
   profileDraft: OnboardingProfileDraft;
   login: (user: JwtResponse) => void;
   logout: () => void;
+  applyAuthenticatedUser: (user: JwtResponse) => void;
+  finishAuthBootstrap: () => void;
   setOnboardingStep: (step: OnboardingStep) => void;
   completeOnboarding: () => void;
   setProfile: (profile: ClientProfileDTO) => void;
@@ -170,30 +174,38 @@ const createProfileDraftFromProfile = (
   };
 };
 
+const applyUserToState = (user: JwtResponse) => {
+  const requiresOnboarding = user.role === 'CLIENT';
+  apiService.setToken(user.token ?? null);
+
+  return {
+    isAuthenticated: true,
+    isAuthBootstrapping: false,
+    isOnboardingComplete: !requiresOnboarding,
+    onboardingStep: requiresOnboarding ? defaultOnboardingStep : 'summary' as OnboardingStep,
+    user,
+    profile: null,
+    profileDraft: createProfileDraftFromProfile(null, user.email ?? ''),
+  };
+};
+
 export const useAppStore = create<AppState>((set) => ({
   isAuthenticated: false,
+  isAuthBootstrapping: true,
   isOnboardingComplete: false,
   onboardingStep: defaultOnboardingStep,
   user: null,
   profile: null,
   profileDraft: defaultProfileDraft,
-  login: (user) => {
-    const requiresOnboarding = user.role === 'CLIENT';
-    apiService.setToken(user.token ?? null);
-
-    set({
-      isAuthenticated: true,
-      isOnboardingComplete: !requiresOnboarding,
-      onboardingStep: requiresOnboarding ? defaultOnboardingStep : 'summary',
-      user,
-      profile: null,
-      profileDraft: createProfileDraftFromProfile(null, user.email ?? ''),
-    });
-  },
+  login: (user) => set(() => applyUserToState(user)),
+  applyAuthenticatedUser: (user) => set(() => applyUserToState(user)),
+  finishAuthBootstrap: () => set({ isAuthBootstrapping: false }),
   logout: () => {
     apiService.setToken(null);
+    void clearPersistedAuthSession();
     set({
       isAuthenticated: false,
+      isAuthBootstrapping: false,
       isOnboardingComplete: false,
       onboardingStep: defaultOnboardingStep,
       user: null,

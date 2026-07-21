@@ -1,0 +1,54 @@
+import * as SecureStore from 'expo-secure-store';
+
+import {
+  clearPersistedAuthSession,
+  loadPersistedAuthSession,
+  savePersistedAuthSession,
+} from '../authSessionStore';
+
+jest.mock('expo-secure-store', () => ({
+  deleteItemAsync: jest.fn(),
+  getItemAsync: jest.fn(),
+  setItemAsync: jest.fn(),
+}));
+
+const mockSecureStore = SecureStore as jest.Mocked<typeof SecureStore>;
+
+describe('authSessionStore', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('saves and loads the persisted auth session', async () => {
+    const session = {
+      email: 'client@example.com',
+      id: 'user-1',
+      role: 'CLIENT',
+      token: 'access-token',
+      type: 'Bearer',
+    };
+
+    mockSecureStore.getItemAsync.mockResolvedValueOnce(JSON.stringify(session));
+
+    await savePersistedAuthSession(session);
+
+    expect(mockSecureStore.setItemAsync).toHaveBeenCalledWith(
+      'auth.session',
+      JSON.stringify(session),
+    );
+
+    await expect(loadPersistedAuthSession()).resolves.toEqual(session);
+  });
+
+  it('returns null when no session is stored', async () => {
+    mockSecureStore.getItemAsync.mockResolvedValueOnce(null);
+
+    await expect(loadPersistedAuthSession()).resolves.toBeNull();
+  });
+
+  it('clears the persisted auth session', async () => {
+    await clearPersistedAuthSession();
+
+    expect(mockSecureStore.deleteItemAsync).toHaveBeenCalledWith('auth.session');
+  });
+});

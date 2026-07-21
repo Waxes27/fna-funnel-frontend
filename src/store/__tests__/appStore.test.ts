@@ -1,24 +1,49 @@
 import { useAppStore } from '../appStore';
 import { apiService } from '../../services/apiService';
+import { clearPersistedAuthSession } from '../../services/authSessionStore';
+
+jest.mock('../../services/authSessionStore', () => ({
+  clearPersistedAuthSession: jest.fn(),
+}));
 
 const resetAppStore = () => {
   apiService.setToken(null);
-  useAppStore.setState({
-    isAuthenticated: false,
-    isOnboardingComplete: false,
-    onboardingStep: 'welcome',
-    user: null,
-    profile: null,
-  });
+  useAppStore.setState(useAppStore.getInitialState());
 };
 
 describe('appStore onboarding state', () => {
   beforeEach(() => {
+    jest.clearAllMocks();
     resetAppStore();
   });
 
   afterAll(() => {
     resetAppStore();
+  });
+
+  it('starts in auth bootstrapping mode', () => {
+    expect(useAppStore.getState().isAuthBootstrapping).toBe(true);
+  });
+
+  it('can finish bootstrap anonymously', () => {
+    useAppStore.getState().finishAuthBootstrap();
+
+    expect(useAppStore.getState().isAuthBootstrapping).toBe(false);
+    expect(useAppStore.getState().isAuthenticated).toBe(false);
+  });
+
+  it('can apply an authenticated user after bootstrap', () => {
+    useAppStore.getState().applyAuthenticatedUser({
+      email: 'client@example.com',
+      id: 'user-1',
+      role: 'CLIENT',
+      token: 'persisted-token',
+      type: 'Bearer',
+    });
+
+    expect(useAppStore.getState().isAuthBootstrapping).toBe(false);
+    expect(useAppStore.getState().isAuthenticated).toBe(true);
+    expect(apiService.getToken()).toBe('persisted-token');
   });
 
   it('marks a client as needing onboarding after login', () => {
@@ -30,6 +55,7 @@ describe('appStore onboarding state', () => {
     });
 
     expect(useAppStore.getState().isAuthenticated).toBe(true);
+    expect(useAppStore.getState().isAuthBootstrapping).toBe(false);
     expect(useAppStore.getState().isOnboardingComplete).toBe(false);
     expect(useAppStore.getState().onboardingStep).toBe('welcome');
     expect(apiService.getToken()).toBe('client-token');
@@ -55,6 +81,7 @@ describe('appStore onboarding state', () => {
     });
 
     expect(useAppStore.getState().isAuthenticated).toBe(true);
+    expect(useAppStore.getState().isAuthBootstrapping).toBe(false);
     expect(useAppStore.getState().isOnboardingComplete).toBe(true);
     expect(useAppStore.getState().onboardingStep).toBe('summary');
   });
@@ -70,6 +97,8 @@ describe('appStore onboarding state', () => {
     useAppStore.getState().logout();
 
     expect(apiService.getToken()).toBeNull();
+    expect(clearPersistedAuthSession).toHaveBeenCalledTimes(1);
     expect(useAppStore.getState().isAuthenticated).toBe(false);
+    expect(useAppStore.getState().isAuthBootstrapping).toBe(false);
   });
 });
