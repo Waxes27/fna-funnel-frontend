@@ -8,10 +8,10 @@ import {
 
 export const authService = {
   login: async (data: LoginRequest): Promise<LoginResponse> => {
-    return apiService.execute<LoginResponse>(() => apiClient.login(data));
+    return apiService.execute<LoginResponse>(() => apiClient.api.login(data));
   },
   
   register: async (data: SignupRequest): Promise<SignupResponse> => {
-    return apiService.execute<SignupResponse>(() => apiClient.register(data));
+    return apiService.execute<SignupResponse>(() => apiClient.api.register(data));
   },
 };

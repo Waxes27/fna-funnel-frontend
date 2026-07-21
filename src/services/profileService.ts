@@ -3,10 +3,14 @@ import { ClientProfileDTO } from '../../clients/fNAPlatformAPIClient/models';
 
 export const profileService = {
   getProfile: async (userId: string): Promise<ClientProfileDTO> => {
-    return apiService.execute<ClientProfileDTO>(() => apiClient.getProfile(userId));
+    return apiService.execute<ClientProfileDTO>(() =>
+      apiClient.api.getProfile({ userId }),
+    );
   },
   
   createOrUpdateProfile: async (userId: string, data: ClientProfileDTO): Promise<ClientProfileDTO> => {
-    return apiService.execute<ClientProfileDTO>(() => apiClient.createOrUpdateProfile(userId, data));
+    return apiService.execute<ClientProfileDTO>(() =>
+      apiClient.api.createOrUpdateProfile({ userId }, data),
+    );
   },
 };

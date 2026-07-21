@@ -19,19 +19,21 @@ export const handleApiError = (error: any): ApiError => {
     return error;
   }
 
-  // Handle Fetch/Network errors
-  if (error.name === 'TypeError' && error.message.includes('Network request failed')) {
+  if (
+    error?.code === 'ERR_NETWORK' ||
+    (error.name === 'TypeError' && error.message?.includes('Network request failed')) ||
+    error.message?.includes('Network Error')
+  ) {
     return new ApiError('Network connection failed. Please check your internet connection.', undefined, undefined, true);
   }
 
-  // Handle AbortError (Timeout)
-  if (error.name === 'AbortError') {
+  if (error?.code === 'ECONNABORTED' || error.name === 'AbortError') {
     return new ApiError('The request timed out. Please try again later.', undefined, undefined, false, true);
   }
 
-  // Handle HTTP errors with Response object
-  if (error instanceof Response || error.status) {
-    const status = error.status;
+  const status = error?.response?.status ?? error?.status;
+
+  if (status) {
     let errorMessage = 'An unexpected error occurred.';
 
     switch (status) {
@@ -57,9 +59,8 @@ export const handleApiError = (error: any): ApiError => {
         errorMessage = `HTTP Error ${status}.`;
     }
 
-    return new ApiError(errorMessage, status, error.data || error);
+    return new ApiError(errorMessage, status, error?.response?.data || error.data || error);
   }
 
-  // Handle unknown errors
   return new ApiError(error.message || 'An unknown error occurred.');
 };

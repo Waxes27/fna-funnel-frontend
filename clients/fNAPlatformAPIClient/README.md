@@ -1,4 +1,3 @@
 # fNAPlatformAPIClient
 
-Base URL: http://localhost:8080
-
+Generated from `docs\openapi.json`.
