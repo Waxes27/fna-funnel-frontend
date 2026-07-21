@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { JwtResponse, ClientProfileDTO } from '../../clients/fNAPlatformAPIClient/models';
 import { apiService } from '../services/apiService';
+import { normalizeAuthenticatedUser, normalizeAuthRole } from '../services/authUser';
 import { clearPersistedAuthSession } from '../services/authSessionStore';
 
 export type OnboardingStep =
@@ -175,17 +176,18 @@ const createProfileDraftFromProfile = (
 };
 
 const applyUserToState = (user: JwtResponse) => {
-  const requiresOnboarding = user.role === 'CLIENT';
-  apiService.setToken(user.token ?? null);
+  const normalizedUser = normalizeAuthenticatedUser(user);
+  const requiresOnboarding = normalizeAuthRole(normalizedUser.role) === 'CLIENT';
+  apiService.setToken(normalizedUser.token ?? null);
 
   return {
     isAuthenticated: true,
     isAuthBootstrapping: false,
     isOnboardingComplete: !requiresOnboarding,
     onboardingStep: requiresOnboarding ? defaultOnboardingStep : 'summary' as OnboardingStep,
-    user,
+    user: normalizedUser,
     profile: null,
-    profileDraft: createProfileDraftFromProfile(null, user.email ?? ''),
+    profileDraft: createProfileDraftFromProfile(null, normalizedUser.email ?? ''),
   };
 };
 

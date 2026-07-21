@@ -20,7 +20,7 @@ describe('authService.resolveCurrentUserSession', () => {
       data: {
         email: 'backend@example.com',
         id: 'backend-user-id',
-        role: 'ADVISER',
+        role: 'ROLE_ADVISER',
       },
     } as any);
 
@@ -34,6 +34,26 @@ describe('authService.resolveCurrentUserSession', () => {
 
     expect(apiService.getToken()).toBe('access-token');
     expect(apiClient.api.currentUser).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the access token when auth/me returns a null token payload', async () => {
+    jest.spyOn(apiClient.api, 'currentUser').mockResolvedValue({
+      data: {
+        email: 'client@example.com',
+        id: 'backend-user-id',
+        role: 'ROLE_CLIENT',
+        token: null,
+        type: 'Bearer',
+      },
+    } as any);
+
+    await expect(authService.resolveCurrentUserSession(tokenUser)).resolves.toEqual({
+      email: 'client@example.com',
+      id: 'backend-user-id',
+      role: 'CLIENT',
+      token: 'access-token',
+      type: 'Bearer',
+    });
   });
 
   it('clears the token when auth/me fails', async () => {

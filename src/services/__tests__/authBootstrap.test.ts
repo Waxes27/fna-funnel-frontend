@@ -24,7 +24,7 @@ describe('bootstrapAuthSession', () => {
     mockedLoadPersistedAuthSession.mockResolvedValue({
       email: 'client@example.com',
       id: 'user-1',
-      role: 'CLIENT',
+      role: 'ROLE_CLIENT',
       token: 'persisted-token',
       type: 'Bearer',
     });
@@ -33,7 +33,7 @@ describe('bootstrapAuthSession', () => {
       data: {
         email: 'client@example.com',
         id: 'user-1',
-        role: 'CLIENT',
+        role: 'ROLE_CLIENT',
       },
     } as any);
 

@@ -50,7 +50,7 @@ describe('appStore onboarding state', () => {
     useAppStore.getState().login({
       id: 'user-1',
       email: 'test@example.com',
-      role: 'CLIENT',
+      role: 'ROLE_CLIENT',
       token: 'client-token',
     });
 
@@ -58,6 +58,7 @@ describe('appStore onboarding state', () => {
     expect(useAppStore.getState().isAuthBootstrapping).toBe(false);
     expect(useAppStore.getState().isOnboardingComplete).toBe(false);
     expect(useAppStore.getState().onboardingStep).toBe('welcome');
+    expect(useAppStore.getState().user?.role).toBe('CLIENT');
     expect(apiService.getToken()).toBe('client-token');
     expect(useAppStore.getState().profileDraft.primaryApplicant.emailAddress).toBe(
       'test@example.com',

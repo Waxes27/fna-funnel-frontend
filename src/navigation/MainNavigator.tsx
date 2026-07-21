@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import HomeScreen from '../screens/HomeScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import { normalizeAuthRole } from '../services/authUser';
 import { useAppStore } from '../store/appStore';
 import { useTheme } from '../theme';
 
@@ -77,7 +78,7 @@ const ClientTabNavigator = () => {
 export const MainNavigator = () => {
   const user = useAppStore((state) => state.user);
 
-  if (user?.role === 'CLIENT') {
+  if (normalizeAuthRole(user?.role) === 'CLIENT') {
     return <ClientTabNavigator />;
   }
 

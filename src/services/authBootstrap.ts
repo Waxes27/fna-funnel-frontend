@@ -1,5 +1,6 @@
 import { JwtResponse } from '../../clients/fNAPlatformAPIClient/models';
 import { apiClient, apiService } from './apiService';
+import { normalizeAuthenticatedUser } from './authUser';
 import {
   clearPersistedAuthSession,
   loadPersistedAuthSession,
@@ -24,11 +25,11 @@ export const bootstrapAuthSession = async (): Promise<BootstrapAuthResult> => {
 
     return {
       status: 'authenticated',
-      user: {
+      user: normalizeAuthenticatedUser({
         ...response.data,
         token: persistedSession.token,
         type: persistedSession.type ?? 'Bearer',
-      },
+      }),
     };
   } catch (error: any) {
     if (error?.response?.status === 401) {

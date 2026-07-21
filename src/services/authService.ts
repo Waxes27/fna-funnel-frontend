@@ -6,19 +6,21 @@ import {
   SignupRequest,
   SignupResponse,
 } from '../../clients/fNAPlatformAPIClient/models';
+import { normalizeAuthenticatedUser } from './authUser';
 
 const mergeAuthenticatedUser = (
   tokenUser: JwtResponse,
   backendUser: Partial<JwtResponse>,
-): JwtResponse => ({
-  ...tokenUser,
-  ...backendUser,
-  id: backendUser.id ?? tokenUser.id,
-  email: backendUser.email ?? tokenUser.email,
-  role: backendUser.role ?? tokenUser.role,
-  token: tokenUser.token,
-  type: tokenUser.type || backendUser.type || 'Bearer',
-});
+): JwtResponse =>
+  normalizeAuthenticatedUser({
+    ...tokenUser,
+    ...backendUser,
+    id: backendUser.id ?? tokenUser.id,
+    email: backendUser.email ?? tokenUser.email,
+    role: backendUser.role ?? tokenUser.role,
+    token: tokenUser.token,
+    type: tokenUser.type || backendUser.type || 'Bearer',
+  });
 
 export const authService = {
   login: async (data: LoginRequest): Promise<LoginResponse> => {
