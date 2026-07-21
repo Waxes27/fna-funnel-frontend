@@ -4,6 +4,7 @@ import { render, waitFor } from '@testing-library/react-native';
 import * as AuthSession from 'expo-auth-session';
 
 import LoginScreen from '../LoginScreen';
+import { authService } from '../../services/authService';
 import { savePersistedAuthSession } from '../../services/authSessionStore';
 import {
   createKeycloakRedirectUri,
@@ -23,6 +24,12 @@ jest.mock('../../store/appStore', () => ({
 
 jest.mock('../../services/authSessionStore', () => ({
   savePersistedAuthSession: jest.fn(),
+}));
+
+jest.mock('../../services/authService', () => ({
+  authService: {
+    resolveCurrentUserSession: jest.fn(),
+  },
 }));
 
 jest.mock('../../services/keycloakAuth', () => ({
@@ -70,6 +77,7 @@ const mockUseAutoDiscovery = AuthSession.useAutoDiscovery as jest.Mock;
 const mockUseAuthRequest = AuthSession.useAuthRequest as jest.Mock;
 const mockUseAppStore = useAppStore as unknown as jest.Mock;
 const mockSavePersistedAuthSession = savePersistedAuthSession as jest.Mock;
+const mockResolveCurrentUserSession = authService.resolveCurrentUserSession as jest.Mock;
 const mockExchangeKeycloakCode = exchangeKeycloakCode as jest.Mock;
 const mockMapKeycloakTokenResponseToUser = mapKeycloakTokenResponseToUser as jest.Mock;
 
@@ -99,10 +107,11 @@ describe('LoginScreen', () => {
     ]);
     mockExchangeKeycloakCode.mockResolvedValue(tokenResponse);
     mockMapKeycloakTokenResponseToUser.mockReturnValue(mappedUser);
+    mockResolveCurrentUserSession.mockResolvedValue(mappedUser);
     mockSavePersistedAuthSession.mockResolvedValue(undefined);
   });
 
-  it('persists the auth session before completing login', async () => {
+  it('calls auth/me, persists the auth session, and then completes login', async () => {
     render(<LoginScreen />);
 
     await waitFor(() => {
@@ -112,10 +121,14 @@ describe('LoginScreen', () => {
         discovery,
         redirectUri: createKeycloakRedirectUri(),
       });
+      expect(mockResolveCurrentUserSession).toHaveBeenCalledWith(mappedUser);
       expect(mockSavePersistedAuthSession).toHaveBeenCalledWith(mappedUser);
       expect(mockLogin).toHaveBeenCalledWith(mappedUser);
     });
 
+    expect(mockResolveCurrentUserSession.mock.invocationCallOrder[0]).toBeLessThan(
+      mockSavePersistedAuthSession.mock.invocationCallOrder[0],
+    );
     expect(mockSavePersistedAuthSession.mock.invocationCallOrder[0]).toBeLessThan(
       mockLogin.mock.invocationCallOrder[0],
     );

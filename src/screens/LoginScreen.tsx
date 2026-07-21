@@ -12,6 +12,7 @@ import {
   keycloakIssuer,
   mapKeycloakTokenResponseToUser,
 } from '../services/keycloakAuth';
+import { authService } from '../services/authService';
 import { savePersistedAuthSession } from '../services/authSessionStore';
 import { useAppStore } from '../store/appStore';
 import { useTheme } from '../theme';
@@ -60,9 +61,10 @@ const LoginScreen = () => {
           redirectUri,
         });
 
-        const mappedUser = mapKeycloakTokenResponseToUser(tokenResponse);
-        await savePersistedAuthSession(mappedUser);
-        login(mappedUser);
+        const tokenUser = mapKeycloakTokenResponseToUser(tokenResponse);
+        const authenticatedUser = await authService.resolveCurrentUserSession(tokenUser);
+        await savePersistedAuthSession(authenticatedUser);
+        login(authenticatedUser);
       } catch (error: any) {
         if (isMounted) {
           Alert.alert(
