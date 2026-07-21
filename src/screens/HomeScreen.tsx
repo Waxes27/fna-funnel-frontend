@@ -252,30 +252,9 @@ const HomeScreen = ({ navigation: _navigation }: any) => {
           </View>
 
           <View style={styles.header}>
-            <View style={[styles.avatarWrap, { marginBottom: spacing.md }]}>
-              <View
-                style={[
-                  styles.avatar,
-                  {
-                    backgroundColor: colors.ink,
-                    borderRadius: radii.circle,
-                  },
-                ]}
-              >
-                <Typography
-                  variant="h2"
-                  style={{
-                    color: colors.canvas,
-                    fontFamily: typography.families.primary ?? typography.families.fallback,
-                    includeFontPadding: false,
-                  }}
-                >
-                  {avatarLetter}
-                </Typography>
-              </View>
-            </View>
 
-            <Typography variant="h2">{displayTitle}</Typography>
+
+            <Typography variant="h3">{displayTitle}</Typography>
             <View style={{ height: spacing.xs }} />
 
             <View style={{ height: spacing.sm }} />

@@ -20,41 +20,46 @@ export type ClientTabParamList = {
 const Stack = createNativeStackNavigator<MainStackParamList>();
 const Tab = createBottomTabNavigator<ClientTabParamList>();
 
+const TabBarIcon: React.FC<{
+  routeName: keyof ClientTabParamList;
+  focused: boolean;
+  color: string;
+}> = ({ routeName, focused, color }) => {
+  let iconName: keyof typeof Ionicons.glyphMap;
+
+  if (routeName === 'Home') {
+    iconName = focused ? 'home' : 'home-outline';
+  } else if (routeName === 'Profile') {
+    iconName = focused ? 'person' : 'person-outline';
+  } else {
+    iconName = 'help';
+  }
+
+  return <Ionicons name={iconName} size={22} color={color} />;
+};
+
 const ClientTabNavigator = () => {
-  const { colors, radii, shadows } = useTheme();
+  const { colors, typography } = useTheme();
 
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName: keyof typeof Ionicons.glyphMap;
-
-          if (route.name === 'Home') {
-            iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'Profile') {
-            iconName = focused ? 'person' : 'person-outline';
-          } else {
-            iconName = 'help';
-          }
-
-          return <Ionicons name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: colors.ink,
+        tabBarIcon: ({ focused, color }) => (
+          <TabBarIcon routeName={route.name} focused={focused} color={color} />
+        ),
+        tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.textSecondary,
-        tabBarStyle: [
-          {
-            backgroundColor: colors.surfaceRaised,
-            borderTopColor: 'transparent',
-            borderTopWidth: 0,
-            position: 'absolute',
-            left: 16,
-            right: 16,
-            bottom: 16,
-            borderRadius: radii.pill,
-            paddingTop: 6,
-          },
-          shadows.level1,
-        ],
+        tabBarStyle: {
+          backgroundColor: colors.canvas,
+          borderTopColor: colors.border,
+          borderTopWidth: 1,
+          elevation: 0,
+        },
+        tabBarLabelStyle: {
+          fontFamily: typography.families.primary ?? typography.families.fallback,
+          fontSize: 12,
+          marginTop: 2,
+        },
         headerShown: false,
       })}
     >

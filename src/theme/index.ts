@@ -16,6 +16,7 @@ export const palette = {
   signalOrange: '#CF4500',
   lightSignalOrange: '#F37338',
   clayBrown: '#9A3A0A',
+  mossGreen: '#4C5A2C',
 };
 
 export const spacing = {
@@ -161,6 +162,7 @@ export type Theme = {
     lightSignalOrange: string;
     clayBrown: string;
     dustTaupe: string;
+    accent: string;
   };
   spacing: typeof spacing;
   radii: typeof radii;
@@ -186,6 +188,7 @@ export const theme: Theme = {
     lightSignalOrange: palette.lightSignalOrange,
     clayBrown: palette.clayBrown,
     dustTaupe: palette.dustTaupe,
+    accent: palette.mossGreen,
   },
   spacing,
   radii,
