@@ -65,7 +65,7 @@ const ClientTabNavigator = () => {
 };
 
 export const MainNavigator = () => {
-  const { user } = useAppStore();
+  const user = useAppStore((state) => state.user);
 
   if (user?.role === 'CLIENT') {
     return <ClientTabNavigator />;

@@ -6,29 +6,26 @@ This document defines the UI/UX Component Library for the AI Financial Advisor P
 ### 1.1 Core Principles
 - **Mobile-First & Responsive:** Graceful scaling from mobile (320px) to ultra-wide desktop displays.
 - **Accessibility (WCAG 2.1 AA):** Minimum 4.5:1 contrast ratios for text, 3:1 for UI components. Comprehensive ARIA attributes, keyboard navigability, and screen reader support.
-- **Progressive Disclosure:** Complex financial forms are broken into digestible multi-step wizards to minimize cognitive load.
-- **Component Architecture:** Built using React Native/Next.js with Tailwind CSS and Radix UI primitives for accessible, unstyled structural foundations.
+- **Progressive Disclosure:** Complex financial forms are broken into digestible, mobile-first onboarding steps with persistent progress feedback.
+- **Component Architecture:** Built with React Native primitives and theme tokens, using shared foundation components (`Screen`, `Surface`, `Typography`, `Input`, `Button`) plus onboarding-specific composition helpers.
 
 ---
 
 ## 2. Design Tokens (Momentum Theme)
 
 ### 2.1 Color Palette
-*   **Primary:** `#005eb8` (Momentum Blue) - Used for primary actions, links, and active states.
-*   **Secondary:** `#e35205` (Momentum Orange) - Used for highlights, warnings, and secondary CTAs.
-*   **Background:** `#f8fafc` (Slate 50) - App background.
-*   **Surface:** `#ffffff` (White) - Card and modal backgrounds.
-*   **Text (Primary):** `#0f172a` (Slate 900) - High contrast body text.
-*   **Text (Secondary):** `#475569` (Slate 600) - Helper text and labels.
-*   **Success:** `#16a34a` (Green 600) - Positive financial indicators.
-*   **Error:** `#dc2626` (Red 600) - Form errors, financial alerts.
+*   **Implementation Source:** All production colors come from the shared React Native theme object rather than hard-coded per-screen values.
+*   **Primary:** Ink-led Momentum palette for primary actions, progress fills, and highlighted onboarding moments.
+*   **Secondary:** Signal orange accents for consent, status emphasis, and actionable highlights.
+*   **Background & Surface:** Canvas, `surface`, and `surfaceRaised` tokens differentiate full-screen layouts from elevated cards and summary rows.
+*   **Text:** `text` and `textSecondary` tokens preserve hierarchy for headings, body copy, helper text, and status labels.
 
 ### 2.2 Typography
 *   **Font Family:** Primary Sans-Serif (e.g., Inter or Momentum brand font).
 *   **Scale:** Base 16px (1rem). H1 (2.5rem), H2 (2rem), H3 (1.75rem), Body (1rem), Small (0.875rem).
 *   **Weights:** Regular (400), Medium (500), Bold (700).
 
-### 2.3 Breakpoints (Tailwind Defaults)
+### 2.3 Responsive Tiers
 *   **Mobile (Default):** `< 768px`
 *   **Tablet (`md`):** `768px - 1023px`
 *   **Desktop (`lg`):** `1024px - 1279px`
@@ -42,18 +39,16 @@ This document defines the UI/UX Component Library for the AI Financial Advisor P
 Primary interactive element for submitting forms, triggering modals, and navigation.
 
 *   **Props:**
-    *   `variant` (enum: `'primary' | 'secondary' | 'outline' | 'ghost' | 'danger'`)
-    *   `size` (enum: `'sm' | 'md' | 'lg'`)
+    *   `variant` (enum: `'primary' | 'secondary' | 'outline' | 'consent'`)
     *   `isLoading` (boolean) - Replaces text with a spinner and disables interaction.
     *   `disabled` (boolean)
-    *   `leftIcon` / `rightIcon` (ReactNode)
-    *   `ariaLabel` (string) - Required if button contains only an icon.
+    *   `style` / `textStyle` for token-safe layout customization
 *   **State Management:** Local UI state only (hover, focus, active).
-*   **Responsive Behavior:** Full-width on mobile viewports; inline-block with defined padding on tablet/desktop. Minimum touch target of 44x44px enforced on mobile.
-*   **Accessibility:** Focus rings visible on keyboard navigation (`focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2`).
+*   **Responsive Behavior:** Full-width CTA treatment on onboarding screens with a minimum touch target enforced by the shared layout token set.
+*   **Accessibility:** Pressable semantics and high-contrast label styles are preserved across primary, secondary, outline, and consent states.
 
-### 3.2 Input Field (`<InputField />`)
-Wraps Radix UI form primitives to handle text, passwords, and numeric financial inputs.
+### 3.2 Input Field (`<Input />`)
+Wraps the shared React Native input primitive to handle text, passwords, and numeric financial inputs.
 
 *   **Props:**
     *   `label` (string) - Required for accessibility.
@@ -61,9 +56,9 @@ Wraps Radix UI form primitives to handle text, passwords, and numeric financial 
     *   `error` (string) - Error message from React Hook Form.
     *   `helperText` (string)
     *   `required` (boolean)
-*   **State Management:** Controlled via React Hook Form + Zod validation.
-*   **Responsive Behavior:** Stacks vertically. Font size minimum 16px on iOS to prevent auto-zoom on focus.
-*   **Accessibility:** Automatically links label to input via `htmlFor`/`id`. Uses `aria-invalid` and `aria-describedby` when `error` is present.
+*   **State Management:** Used both with React Hook Form + Zod and with lightweight Zustand-backed draft updates for onboarding steps.
+*   **Responsive Behavior:** Stacks vertically inside `OnboardingCard` containers and keeps spacing consistent through theme tokens.
+*   **Accessibility:** Provides explicit labels, error copy, and mobile-friendly input modes for phone, email, and numeric fields.
 
 ### 3.3 Status Badge (`<Badge />`)
 Used for Risk Profile status (e.g., "Aggressive"), Budget Health, and KYC Verification status.
@@ -88,20 +83,29 @@ Container for financial summaries, adviser dashboard items, and platform analyti
 
 ## 4. Complex Components (Organisms)
 
-### 4.1 Multi-Step Wizard (`<DataCaptureWizard />`)
-Implements progressive disclosure for the Financial Data Capture System (Assets, Liabilities, Income, Expenses).
+### 4.1 Onboarding Wizard (`<OnboardingShell />`)
+Implements progressive disclosure for the mobile-first client setup flow.
 
 *   **Props:**
-    *   `steps` (Array<{ id: string, label: string, component: ReactNode }>)
-    *   `onComplete` (function) - Callback when the final step is submitted.
+    *   `step` and `totalSteps` for numbered progress
+    *   `children` for screen-specific content
+    *   optional `contentContainerStyle` for safe token-based layout adjustments
 *   **State Management:** 
-    *   **Zustand Store (`useWizardStore`)**: Tracks `currentStepIndex`, `furthestStepReached`, and aggregates form data (`draftFinancialData`) across steps before final submission.
+    *   **Zustand (`useAppStore`)** tracks `onboardingStep`, `isOnboardingComplete`, and the shared `profileDraft` used across all onboarding screens.
 *   **Responsive Behavior:**
-    *   **Mobile:** Shows a horizontal progress bar or "Step X of Y" text to save vertical space.
-    *   **Desktop:** Displays a vertical or horizontal stepper with full step labels (e.g., "1. Personal -> 2. Assets -> 3. Liabilities").
-*   **Accessibility:** Focus shifts to the top of the new step container upon navigation. Uses `aria-current="step"` for the active step indicator.
+    *   **Mobile:** Uses scrollable single-column layouts, persistent "Step X of Y" feedback, and bottom action bars sized for thumb reach.
+    *   **Tablet/Desktop:** Reuses the same shell while allowing cards and content stacks to breathe with larger spacing tokens.
+*   **Accessibility:** Progress remains visible at the top of each step, actions stay grouped in a predictable action bar, and each screen keeps one primary task in focus.
 
-### 4.2 Financial Chart Container (`<FinancialChart />`)
+### 4.2 Onboarding Card Set
+The onboarding flow standardizes screen composition through reusable helpers.
+
+*   **`<OnboardingHeader />`:** Renders eyebrow, title, and description with consistent type hierarchy.
+*   **`<OnboardingCard />`:** Wraps elevated step content in a themed `Surface`.
+*   **`<OnboardingActionBar />`:** Aligns primary and secondary CTAs, loading states, and consent-style actions.
+*   **`<OnboardingProgress />`:** Displays the current step count and progress bar using theme colors and radii.
+
+### 4.3 Financial Chart Container (`<FinancialChart />`)
 Wraps Recharts/Chart.js for Budget Analysis (Pie) and Retirement Projections (Line).
 
 *   **Props:**
@@ -115,7 +119,7 @@ Wraps Recharts/Chart.js for Budget Analysis (Pie) and Retirement Projections (Li
     *   **Desktop:** Legends positioned to the right. Interactive hover states reveal precise data points.
 *   **Accessibility:** Includes a visually hidden data table (`<table className="sr-only">`) containing the chart's raw data for screen readers.
 
-### 4.3 AI Financial Assistant Chat (`<AIChatInterface />`)
+### 4.4 AI Financial Assistant Chat (`<AIChatInterface />`)
 Conversational UI for interacting with the NotebookLM-powered AI.
 
 *   **Props:**
@@ -132,7 +136,7 @@ Conversational UI for interacting with the NotebookLM-powered AI.
     *   `aria-live="polite"` on the message container to announce new AI responses.
     *   Markdown is safely parsed and rendered with semantic HTML tags.
 
-### 4.4 Data Grid / Table (`<DataTable />`)
+### 4.5 Data Grid / Table (`<DataTable />`)
 Used in the Adviser Dashboard to view client lists and the Admin Panel for system variables.
 
 *   **Props:**
@@ -153,9 +157,9 @@ Used in the Adviser Dashboard to view client lists and the Admin Panel for syste
 
 ### 5.1 Global State (Zustand)
 Zustand is utilized for cross-component state that doesn't require backend synchronization.
-*   `useAppStore`: Manages UI toggles (sidebar state, theme, global modals).
-*   `useAuthStore`: Manages JWT presence, decoded user role (`CLIENT`, `ADVISER`, `ADMIN`), and session expiry.
-*   `useFNAStore`: Holds the draft state of the Financial Needs Analysis before final submission.
+*   `useAppStore`: Manages auth state, onboarding progress, setup completion, and the shared onboarding draft.
+*   `profileDraft`: Stores goals, personal details, financial snapshot values, risk comfort, consent, notification preference, and account connection choice.
+*   `onboardingStep`: Drives resume behavior so the router can reopen the flow at the next incomplete screen.
 
 ### 5.2 Server State (React Query)
 React Query handles all API interactions, caching, and background synchronization.

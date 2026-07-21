@@ -23,6 +23,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 const LoginScreen = ({ navigation }: any) => {
   const login = useAppStore((state) => state.login);
+  const setOnboardingStep = useAppStore((state) => state.setOnboardingStep);
   const { colors, layout, spacing } = useTheme();
 
   const {
@@ -43,13 +44,18 @@ const LoginScreen = ({ navigation }: any) => {
         email: data.email,
         password: data.password,
       });
-      
-      const { token, user } = response.data;
-      
-      // In a real app, save token to SecureStore here
+
+      const { user } = response.data;
+
       login(user);
+      if (user?.role === 'CLIENT') {
+        setOnboardingStep('goals');
+      }
     } catch (error: any) {
-      Alert.alert('Login Failed', error.response?.data?.message || 'An error occurred during login.');
+      Alert.alert(
+        'Login Failed',
+        error.response?.data?.message || 'An error occurred during login.',
+      );
     }
   };
 

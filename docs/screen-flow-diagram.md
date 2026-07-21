@@ -7,34 +7,34 @@ This document maps the complete application navigation flow and user journeys ba
 ```mermaid
 graph TD
     %% Public / Unauthenticated Flow
-    Start((Start)) --> LandingPage[Landing Page]
-    LandingPage --> Login[Login Screen]
-    LandingPage --> Register[Registration Screen]
-    
-    Register --> OTP[OTP / Email Verification]
-    OTP --> Login
-    
-    Login --> ForgotPassword[Forgot Password]
-    ForgotPassword --> ResetPassword[Reset Password]
-    ResetPassword --> Login
+    Start((Start)) --> AuthRouter{Authenticated?}
+    AuthRouter -- No --> Welcome[Welcome Carousel]
+    Welcome --> SignupMethod[Sign-up Method]
+    SignupMethod --> EmailSignup[Email Sign-up]
+    SignupMethod --> Login[Login Screen]
+    EmailSignup --> OTP[OTP Verification]
+    Login --> OTP
 
-    %% Authentication Gateway
-    Login -- Authenticate JWT --> AuthRouter{Role Router}
+    %% Client Onboarding Gateway
+    AuthRouter -- "ROLE_CLIENT + Incomplete Setup" --> Goals[Goals]
+    OTP --> Goals
+    Goals --> ValueExplainer[Value Explainer]
+    ValueExplainer --> LegalName[Legal Name]
+    LegalName --> DateOfBirth[Date of Birth]
+    DateOfBirth --> ContactDetails[Contact Details]
+    ContactDetails --> HouseholdEmployment[Household & Employment]
+    HouseholdEmployment --> FinancialSnapshot[Financial Snapshot]
+    FinancialSnapshot --> RiskQuiz[Risk Quiz]
+    RiskQuiz --> Consent[Consent]
+    Consent --> NotificationPrompt[Notification Prompt]
+    NotificationPrompt --> AccountConnection[Account Connection]
+    AccountConnection --> SetupSummary[Setup Summary]
+    SetupSummary --> ClientDash[Client Dashboard]
+    ClientDash --> ResumeSetup[Continue Setup CTA]
+    ResumeSetup --> Goals
 
-    %% Client User Journey
-    AuthRouter -- "ROLE_CLIENT" --> ClientDash[Client Dashboard]
-    
-    ClientDash --> ProfileSetup[Client Profile Setup]
-    ProfileSetup --> PersonalInfo[Personal & Contact Info]
-    PersonalInfo --> EmploymentInfo[Employment & Household Info]
-    EmploymentInfo --> ClientDash
-    
-    ClientDash --> DataCapture[Financial Data Capture]
-    DataCapture --> AssetsLiabilities[Assets & Liabilities]
-    AssetsLiabilities --> IncomeExpenses[Income & Expenses]
-    IncomeExpenses --> RiskProfile[Risk Profiling Questionnaire]
-    RiskProfile --> ClientDash
-    
+    %% Completed Client Journey
+    AuthRouter -- "ROLE_CLIENT + Complete Setup" --> ClientDash
     ClientDash --> AnalysisResults[Financial Analysis Results]
     AnalysisResults --> BudgetView[Budget Analysis View]
     AnalysisResults --> FNAView[FNA & Insurance Gaps]
@@ -78,21 +78,22 @@ graph TD
     %% Audit Logic (Background Process)
     EditAssumptions -.-> AuditLog[(Audit Log)]
     AIAssistant -.-> AuditLog
-    PersonalInfo -.-> AuditLog
-    AssetsLiabilities -.-> AuditLog
+    ContactDetails -.-> AuditLog
+    FinancialSnapshot -.-> AuditLog
 ```
 
 ## User Journeys & Navigation Patterns
 
 ### 1. Unauthenticated Journey (Public Flow)
-- **Entry Point:** Users arrive at the Landing Page.
-- **Actions:** They can navigate to Login or Registration.
-- **Onboarding:** New users must pass through an OTP and Email verification screen before proceeding to Login. Password recovery routes through a reset token sent via email.
+- **Entry Point:** New users start in the mobile-first welcome carousel rather than a flat landing/login split.
+- **Primary Path:** Welcome -> Sign-up method -> Email sign-up -> OTP verification.
+- **Secondary Path:** Returning users can jump from the sign-up method screen into Login and re-enter the guided setup at the correct authenticated step.
 
 ### 2. Client User Journey (`ROLE_CLIENT`)
-- **Dashboard:** After login, clients land on the Client Dashboard, which acts as the central hub displaying their financial health score and pending actions.
-- **Onboarding/Data Entry:** The flow guides them linearly through Profile Setup (Personal -> Employment) and Data Capture (Assets -> Income -> Risk Profile).
-- **Exploration:** Once data is populated, clients can branch out to view specific analysis modules (Budget, FNA, Retirement, Estate).
+- **Onboarding Gate:** Authenticated client users stay inside `OnboardingNavigator` until `isOnboardingComplete` is true.
+- **Guided Setup:** The flow progresses through goals, explanation, identity, contact, household/employment, financial snapshot, risk, consent, notifications, account connection, and summary.
+- **Resume Entry:** If profile data is missing from Home, the dashboard exposes a Continue Setup CTA that reopens onboarding at the first incomplete setup step.
+- **Exploration:** Once setup is complete, clients can branch out to view specific analysis modules (Budget, FNA, Retirement, Estate).
 - **Interactive Tools:** From the Retirement view, users can navigate into the Scenario Simulation Engine. The AI Financial Assistant is accessible directly from the dashboard.
 - **Output:** Clients can visit the Reports Center to download their health PDF or proceed to book a consultation.
 
