@@ -1,8 +1,9 @@
-import { apiClient, apiService } from '../apiService';
+import { apiService } from '../apiService';
 import {
   clearPersistedAuthSession,
   loadPersistedAuthSession,
 } from '../authSessionStore';
+import { authService } from '../authService';
 import { bootstrapAuthSession } from '../authBootstrap';
 
 jest.mock('../authSessionStore', () => ({
@@ -10,17 +11,23 @@ jest.mock('../authSessionStore', () => ({
   loadPersistedAuthSession: jest.fn(),
 }));
 
+jest.mock('../authService', () => ({
+  authService: {
+    resolveCurrentUserSession: jest.fn(),
+  },
+}));
+
 const mockedLoadPersistedAuthSession = loadPersistedAuthSession as jest.Mock;
 const mockedClearPersistedAuthSession = clearPersistedAuthSession as jest.Mock;
+const mockedResolveCurrentUserSession = authService.resolveCurrentUserSession as jest.Mock;
 
 describe('bootstrapAuthSession', () => {
   beforeEach(() => {
-    jest.restoreAllMocks();
     jest.clearAllMocks();
     apiService.setToken(null);
   });
 
-  it('returns an authenticated user when persisted session is valid', async () => {
+  it('returns an authenticated session when the persisted session is valid', async () => {
     mockedLoadPersistedAuthSession.mockResolvedValue({
       email: 'client@example.com',
       id: 'user-1',
@@ -28,17 +35,7 @@ describe('bootstrapAuthSession', () => {
       token: 'persisted-token',
       type: 'Bearer',
     });
-
-    jest.spyOn(apiClient.api, 'currentUser').mockResolvedValue({
-      data: {
-        email: 'client@example.com',
-        id: 'user-1',
-        role: 'ROLE_CLIENT',
-      },
-    } as any);
-
-    await expect(bootstrapAuthSession()).resolves.toEqual({
-      status: 'authenticated',
+    mockedResolveCurrentUserSession.mockResolvedValue({
       user: {
         email: 'client@example.com',
         id: 'user-1',
@@ -46,23 +43,49 @@ describe('bootstrapAuthSession', () => {
         token: 'persisted-token',
         type: 'Bearer',
       },
+      profile: {
+        id: 'profile-1',
+        userId: 'user-1',
+      },
+      isOnboardingComplete: true,
+    });
+
+    await expect(bootstrapAuthSession()).resolves.toEqual({
+      status: 'authenticated',
+      session: {
+        user: {
+          email: 'client@example.com',
+          id: 'user-1',
+          role: 'CLIENT',
+          token: 'persisted-token',
+          type: 'Bearer',
+        },
+        profile: {
+          id: 'profile-1',
+          userId: 'user-1',
+        },
+        isOnboardingComplete: true,
+      },
     });
 
     expect(apiService.getToken()).toBe('persisted-token');
+    expect(mockedResolveCurrentUserSession).toHaveBeenCalledWith({
+      email: 'client@example.com',
+      id: 'user-1',
+      role: 'ROLE_CLIENT',
+      token: 'persisted-token',
+      type: 'Bearer',
+    });
   });
 
   it('returns anonymous when there is no persisted session token', async () => {
     mockedLoadPersistedAuthSession.mockResolvedValue(null);
 
-    const currentUserSpy = jest
-      .spyOn(apiClient.api, 'currentUser')
-      .mockResolvedValue({ data: {} } as any);
-
     await expect(bootstrapAuthSession()).resolves.toEqual({
       status: 'anonymous',
     });
 
-    expect(currentUserSpy).not.toHaveBeenCalled();
+    expect(mockedResolveCurrentUserSession).not.toHaveBeenCalled();
     expect(apiService.getToken()).toBeNull();
   });
 
@@ -74,8 +97,7 @@ describe('bootstrapAuthSession', () => {
       token: 'expired-token',
       type: 'Bearer',
     });
-
-    jest.spyOn(apiClient.api, 'currentUser').mockRejectedValue({
+    mockedResolveCurrentUserSession.mockRejectedValue({
       response: { status: 401 },
     });
 

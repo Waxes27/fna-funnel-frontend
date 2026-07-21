@@ -46,6 +46,35 @@ describe('appStore onboarding state', () => {
     expect(apiService.getToken()).toBe('persisted-token');
   });
 
+  it('can apply an authenticated client with a resolved profile after bootstrap', () => {
+    useAppStore.getState().applyAuthenticatedUser(
+      {
+        email: 'client@example.com',
+        id: 'user-1',
+        role: 'CLIENT',
+        token: 'persisted-token',
+        type: 'Bearer',
+      },
+      {
+        profile: {
+          id: 'profile-1',
+          userId: 'user-1',
+          fullName: 'Client Example',
+          email: 'client@example.com',
+        } as any,
+        isOnboardingComplete: true,
+      },
+    );
+
+    expect(useAppStore.getState().isAuthBootstrapping).toBe(false);
+    expect(useAppStore.getState().isAuthenticated).toBe(true);
+    expect(useAppStore.getState().isOnboardingComplete).toBe(true);
+    expect(useAppStore.getState().onboardingStep).toBe('summary');
+    expect(useAppStore.getState().profile).toEqual(
+      expect.objectContaining({ id: 'profile-1', userId: 'user-1' }),
+    );
+  });
+
   it('marks a client as needing onboarding after login', () => {
     useAppStore.getState().login({
       id: 'user-1',

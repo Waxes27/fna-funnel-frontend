@@ -23,12 +23,18 @@ const LoginScreen = () => {
   const discovery = AuthSession.useAutoDiscovery(keycloakIssuer);
   const redirectUri = React.useMemo(() => createKeycloakRedirectUri(), []);
   const [isLoading, setIsLoading] = React.useState(false);
+  const isPromptInFlightRef = React.useRef(false);
+  const isCompletionInFlightRef = React.useRef(false);
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
     createKeycloakAuthRequestConfig(redirectUri),
     discovery,
   );
 
   React.useEffect(() => {
+    if (isCompletionInFlightRef.current) {
+      return;
+    }
+
     if (
       response?.type !== 'success' ||
       !response.params.code ||
@@ -53,6 +59,8 @@ const LoginScreen = () => {
     let isMounted = true;
 
     const completeKeycloakLogin = async () => {
+      isCompletionInFlightRef.current = true;
+
       try {
         const tokenResponse = await exchangeKeycloakCode({
           code: response.params.code,
@@ -62,9 +70,12 @@ const LoginScreen = () => {
         });
 
         const tokenUser = mapKeycloakTokenResponseToUser(tokenResponse);
-        const authenticatedUser = await authService.resolveCurrentUserSession(tokenUser);
-        await savePersistedAuthSession(authenticatedUser);
-        login(authenticatedUser);
+        const resolvedSession = await authService.resolveCurrentUserSession(tokenUser);
+        await savePersistedAuthSession(resolvedSession.user);
+        login(resolvedSession.user, {
+          profile: resolvedSession.profile,
+          isOnboardingComplete: resolvedSession.isOnboardingComplete,
+        });
       } catch (error: any) {
         if (isMounted) {
           Alert.alert(
@@ -76,6 +87,7 @@ const LoginScreen = () => {
         if (isMounted) {
           setIsLoading(false);
         }
+        isCompletionInFlightRef.current = false;
       }
     };
 
@@ -87,6 +99,10 @@ const LoginScreen = () => {
   }, [discovery, login, redirectUri, request?.codeVerifier, response]);
 
   const handleKeycloakPress = async () => {
+    if (isPromptInFlightRef.current || isCompletionInFlightRef.current || isLoading) {
+      return;
+    }
+
     if (!request) {
       Alert.alert(
         'Keycloak not ready',
@@ -96,6 +112,7 @@ const LoginScreen = () => {
     }
 
     setIsLoading(true);
+    isPromptInFlightRef.current = true;
 
     try {
       const result = await promptAsync();
@@ -109,6 +126,8 @@ const LoginScreen = () => {
         'Keycloak sign-in failed',
         error?.message || 'Unable to open the Keycloak login screen.',
       );
+    } finally {
+      isPromptInFlightRef.current = false;
     }
   };
 

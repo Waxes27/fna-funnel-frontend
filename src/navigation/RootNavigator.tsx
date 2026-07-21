@@ -26,7 +26,10 @@ export const RootNavigator = () => {
         }
 
         if (result.status === 'authenticated') {
-          applyAuthenticatedUser(result.user);
+          applyAuthenticatedUser(result.session.user, {
+            profile: result.session.profile,
+            isOnboardingComplete: result.session.isOnboardingComplete,
+          });
           return;
         }
 

@@ -126,17 +126,22 @@ describe('RootNavigator', () => {
   });
 
   it('applies the authenticated user after a successful bootstrap', async () => {
-    const user = {
-      email: 'client@example.com',
-      id: 'user-1',
-      role: 'CLIENT',
-      token: 'persisted-token',
-      type: 'Bearer',
-    };
-
     mockedBootstrapAuthSession.mockResolvedValueOnce({
       status: 'authenticated',
-      user,
+      session: {
+        user: {
+          email: 'client@example.com',
+          id: 'user-1',
+          role: 'CLIENT',
+          token: 'persisted-token',
+          type: 'Bearer',
+        },
+        profile: {
+          id: 'profile-1',
+          userId: 'user-1',
+        },
+        isOnboardingComplete: true,
+      },
     });
 
     const { state } = renderWithState({
@@ -146,7 +151,22 @@ describe('RootNavigator', () => {
     });
 
     await waitFor(() => {
-      expect(state.applyAuthenticatedUser).toHaveBeenCalledWith(user);
+      expect(state.applyAuthenticatedUser).toHaveBeenCalledWith(
+        {
+          email: 'client@example.com',
+          id: 'user-1',
+          role: 'CLIENT',
+          token: 'persisted-token',
+          type: 'Bearer',
+        },
+        {
+          profile: {
+            id: 'profile-1',
+            userId: 'user-1',
+          },
+          isOnboardingComplete: true,
+        },
+      );
     });
 
     expect(state.finishAuthBootstrap).not.toHaveBeenCalled();

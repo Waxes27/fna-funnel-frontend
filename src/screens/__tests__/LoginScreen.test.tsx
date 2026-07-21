@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, waitFor } from '@testing-library/react-native';
+import { fireEvent, render, waitFor } from '@testing-library/react-native';
 
 import * as AuthSession from 'expo-auth-session';
 
@@ -92,6 +92,14 @@ describe('LoginScreen', () => {
     token: 'access-token',
     type: 'Bearer',
   };
+  const resolvedSession = {
+    user: mappedUser,
+    profile: {
+      id: 'profile-1',
+      userId: 'user-1',
+    },
+    isOnboardingComplete: true,
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -107,7 +115,7 @@ describe('LoginScreen', () => {
     ]);
     mockExchangeKeycloakCode.mockResolvedValue(tokenResponse);
     mockMapKeycloakTokenResponseToUser.mockReturnValue(mappedUser);
-    mockResolveCurrentUserSession.mockResolvedValue(mappedUser);
+    mockResolveCurrentUserSession.mockResolvedValue(resolvedSession);
     mockSavePersistedAuthSession.mockResolvedValue(undefined);
   });
 
@@ -123,7 +131,13 @@ describe('LoginScreen', () => {
       });
       expect(mockResolveCurrentUserSession).toHaveBeenCalledWith(mappedUser);
       expect(mockSavePersistedAuthSession).toHaveBeenCalledWith(mappedUser);
-      expect(mockLogin).toHaveBeenCalledWith(mappedUser);
+      expect(mockLogin).toHaveBeenCalledWith(mappedUser, {
+        profile: {
+          id: 'profile-1',
+          userId: 'user-1',
+        },
+        isOnboardingComplete: true,
+      });
     });
 
     expect(mockResolveCurrentUserSession.mock.invocationCallOrder[0]).toBeLessThan(
@@ -132,5 +146,31 @@ describe('LoginScreen', () => {
     expect(mockSavePersistedAuthSession.mock.invocationCallOrder[0]).toBeLessThan(
       mockLogin.mock.invocationCallOrder[0],
     );
+  });
+
+  it('guards against starting the auth session more than once while loading', async () => {
+    const promptAsync = jest.fn(
+      () =>
+        new Promise<AuthSession.AuthSessionResult>((resolve) => {
+          setTimeout(() => resolve({ type: 'dismiss' }), 0);
+        }),
+    );
+
+    mockUseAuthRequest.mockReturnValue([
+      { codeVerifier: 'code-verifier' },
+      null,
+      promptAsync,
+    ]);
+
+    const { getByText } = render(<LoginScreen />);
+
+    fireEvent.press(getByText('Continue With Keycloak'));
+    fireEvent.press(getByText('Continue With Keycloak'));
+
+    expect(promptAsync).toHaveBeenCalledTimes(1);
+
+    await waitFor(() => {
+      expect(promptAsync).toHaveBeenCalledTimes(1);
+    });
   });
 });

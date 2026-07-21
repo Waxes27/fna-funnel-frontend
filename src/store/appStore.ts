@@ -62,6 +62,12 @@ export interface OnboardingProfileDraft {
   accountConnectionChoice: AccountConnectionChoice;
 }
 
+type AuthenticatedStateOptions = {
+  profile?: ClientProfileDTO | null;
+  isOnboardingComplete?: boolean;
+  onboardingStep?: OnboardingStep;
+};
+
 interface AppState {
   isAuthenticated: boolean;
   isAuthBootstrapping: boolean;
@@ -70,9 +76,9 @@ interface AppState {
   user: JwtResponse | null;
   profile: ClientProfileDTO | null;
   profileDraft: OnboardingProfileDraft;
-  login: (user: JwtResponse) => void;
+  login: (user: JwtResponse, options?: AuthenticatedStateOptions) => void;
   logout: () => void;
-  applyAuthenticatedUser: (user: JwtResponse) => void;
+  applyAuthenticatedUser: (user: JwtResponse, options?: AuthenticatedStateOptions) => void;
   finishAuthBootstrap: () => void;
   setOnboardingStep: (step: OnboardingStep) => void;
   completeOnboarding: () => void;
@@ -175,19 +181,28 @@ const createProfileDraftFromProfile = (
   };
 };
 
-const applyUserToState = (user: JwtResponse) => {
+const applyUserToState = (
+  user: JwtResponse,
+  options: AuthenticatedStateOptions = {},
+) => {
   const normalizedUser = normalizeAuthenticatedUser(user);
-  const requiresOnboarding = normalizeAuthRole(normalizedUser.role) === 'CLIENT';
+  const isClientUser = normalizeAuthRole(normalizedUser.role) === 'CLIENT';
+  const isOnboardingComplete =
+    options.isOnboardingComplete ?? !isClientUser;
+  const resolvedProfile = options.profile ?? null;
+
   apiService.setToken(normalizedUser.token ?? null);
 
   return {
     isAuthenticated: true,
     isAuthBootstrapping: false,
-    isOnboardingComplete: !requiresOnboarding,
-    onboardingStep: requiresOnboarding ? defaultOnboardingStep : 'summary' as OnboardingStep,
+    isOnboardingComplete,
+    onboardingStep: isOnboardingComplete
+      ? ('summary' as OnboardingStep)
+      : options.onboardingStep ?? defaultOnboardingStep,
     user: normalizedUser,
-    profile: null,
-    profileDraft: createProfileDraftFromProfile(null, normalizedUser.email ?? ''),
+    profile: resolvedProfile,
+    profileDraft: createProfileDraftFromProfile(resolvedProfile, normalizedUser.email ?? ''),
   };
 };
 
@@ -199,8 +214,8 @@ export const useAppStore = create<AppState>((set) => ({
   user: null,
   profile: null,
   profileDraft: defaultProfileDraft,
-  login: (user) => set(() => applyUserToState(user)),
-  applyAuthenticatedUser: (user) => set(() => applyUserToState(user)),
+  login: (user, options) => set(() => applyUserToState(user, options)),
+  applyAuthenticatedUser: (user, options) => set(() => applyUserToState(user, options)),
   finishAuthBootstrap: () => set({ isAuthBootstrapping: false }),
   logout: () => {
     apiService.setToken(null);

@@ -207,6 +207,11 @@ const HomeScreen = ({ navigation: _navigation }: any) => {
       setProfile(null);
 
       if (err.response && err.response.status === 404) {
+        useAppStore.setState({
+          profile: null,
+          isOnboardingComplete: false,
+          onboardingStep: 'welcome',
+        });
         setProfileMissing(true);
         setError('Profile not found. Resume onboarding to finish your setup.');
       } else {

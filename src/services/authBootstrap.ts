@@ -1,6 +1,5 @@
-import { JwtResponse } from '../../clients/fNAPlatformAPIClient/models';
-import { apiClient, apiService } from './apiService';
-import { normalizeAuthenticatedUser } from './authUser';
+import { apiService } from './apiService';
+import { authService, ResolvedAuthSession } from './authService';
 import {
   clearPersistedAuthSession,
   loadPersistedAuthSession,
@@ -8,7 +7,7 @@ import {
 
 export type BootstrapAuthResult =
   | { status: 'anonymous' }
-  | { status: 'authenticated'; user: JwtResponse };
+  | { status: 'authenticated'; session: ResolvedAuthSession };
 
 export const bootstrapAuthSession = async (): Promise<BootstrapAuthResult> => {
   const persistedSession = await loadPersistedAuthSession();
@@ -21,18 +20,16 @@ export const bootstrapAuthSession = async (): Promise<BootstrapAuthResult> => {
   try {
     apiService.setToken(persistedSession.token);
 
-    const response = await apiClient.api.currentUser();
-
     return {
       status: 'authenticated',
-      user: normalizeAuthenticatedUser({
-        ...response.data,
+      session: await authService.resolveCurrentUserSession({
+        ...persistedSession,
         token: persistedSession.token,
         type: persistedSession.type ?? 'Bearer',
       }),
     };
   } catch (error: any) {
-    if (error?.response?.status === 401) {
+    if (error?.status === 401 || error?.response?.status === 401) {
       await clearPersistedAuthSession();
       apiService.setToken(null);
       return { status: 'anonymous' };
