@@ -49,7 +49,7 @@ const FinancialSnapshotScreen: React.FC<FinancialSnapshotScreenProps> = ({ navig
   };
 
   return (
-    <OnboardingShell step={8} totalSteps={13}>
+    <OnboardingShell step={8} totalSteps={12}>
       <OnboardingHeader
         eyebrow="Residential address"
         title="Where does the applicant live?"
@@ -57,29 +57,6 @@ const FinancialSnapshotScreen: React.FC<FinancialSnapshotScreenProps> = ({ navig
       />
 
       <OnboardingCard>
-        <View
-          style={[
-            styles.summaryPanel,
-            {
-              backgroundColor: colors.surfaceRaised,
-              borderRadius: radii.primary,
-              borderColor: colors.border,
-              padding: spacing.md,
-            },
-          ]}
-        >
-          <Typography variant="eyebrow" withDot>
-            Address model
-          </Typography>
-          <View style={{ height: spacing.xs }} />
-          <Typography variant="body" style={{ color: colors.textSecondary }}>
-            The model stores street address, suburb, city, province, postal code, and country as
-            separate fields for cleaner downstream processing.
-          </Typography>
-        </View>
-
-        <View style={{ height: spacing.md }} />
-
         <Input
           label="Address line 1"
           placeholder="Street number and street name"
@@ -244,10 +221,6 @@ const FinancialSnapshotScreen: React.FC<FinancialSnapshotScreenProps> = ({ navig
 };
 
 const styles = StyleSheet.create({
-  summaryPanel: {
-    width: '100%',
-    borderWidth: 1,
-  },
   optionGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',

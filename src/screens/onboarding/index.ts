@@ -1,4 +1,3 @@
-export { default as AccountConnectionScreen } from './AccountConnectionScreen';
 export { default as ConsentScreen } from './ConsentScreen';
 export { default as ContactDetailsScreen } from './ContactDetailsScreen';
 export { default as DateOfBirthScreen } from './DateOfBirthScreen';

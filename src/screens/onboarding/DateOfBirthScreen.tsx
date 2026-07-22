@@ -58,7 +58,7 @@ const DateOfBirthScreen: React.FC<DateOfBirthScreenProps> = ({ navigation }) => 
   };
 
   return (
-    <OnboardingShell step={5} totalSteps={13}>
+    <OnboardingShell step={5} totalSteps={12}>
       <OnboardingHeader
         eyebrow="Verify your identity"
         title="Capture the applicant identity details."

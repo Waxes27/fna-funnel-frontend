@@ -40,7 +40,7 @@ const WelcomeCarouselScreen: React.FC<WelcomeCarouselScreenProps> = ({ navigatio
   };
 
   return (
-    <OnboardingShell step={1} totalSteps={13}>
+    <OnboardingShell step={1} totalSteps={12}>
       <OnboardingHeader
         eyebrow="Welcome to Momentum FNA"
         title="Build a financial plan that fits real life."
@@ -48,22 +48,6 @@ const WelcomeCarouselScreen: React.FC<WelcomeCarouselScreenProps> = ({ navigatio
       />
 
       <OnboardingCard>
-        <View style={[styles.heroPanel, { backgroundColor: colors.ink }]}>
-          <Typography variant="eyebrow" style={{ color: colors.canvas }}>
-            Guided Setup
-          </Typography>
-          <View style={{ height: spacing.sm }} />
-          <Typography variant="h3" style={{ color: colors.canvas }}>
-            From first details to first insight in one flow.
-          </Typography>
-          <View style={{ height: spacing.sm }} />
-          <Typography variant="body" style={{ color: colors.dustTaupe }}>
-            Your onboarding stays focused, progressive, and consistent with the rest of the app.
-          </Typography>
-        </View>
-
-        <View style={{ height: spacing.md }} />
-
         {highlights.map((item, index) => {
           const highlightSpacingStyle =
             index === 0
@@ -93,10 +77,6 @@ const WelcomeCarouselScreen: React.FC<WelcomeCarouselScreenProps> = ({ navigatio
 };
 
 const styles = StyleSheet.create({
-  heroPanel: {
-    borderRadius: 28,
-    padding: 24,
-  },
   highlightRow: {
     width: '100%',
   },

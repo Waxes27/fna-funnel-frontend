@@ -34,7 +34,7 @@ const ContactDetailsScreen: React.FC<ContactDetailsScreenProps> = ({ navigation 
     [primaryApplicant.emailAddress],
   );
   const isPhoneValid = useMemo(
-    () => /^\+\d{10,15}$/.test(primaryApplicant.mobileNumber.trim()),
+    () => /^\d{10}$/.test(primaryApplicant.mobileNumber.trim()),
     [primaryApplicant.mobileNumber],
   );
   const isValid = isEmailValid && isPhoneValid;
@@ -50,7 +50,7 @@ const ContactDetailsScreen: React.FC<ContactDetailsScreenProps> = ({ navigation 
   };
 
   return (
-    <OnboardingShell step={6} totalSteps={13}>
+    <OnboardingShell step={6} totalSteps={12}>
       <OnboardingHeader
         eyebrow="Stay connected"
         title="How should we reach you?"
@@ -58,43 +58,21 @@ const ContactDetailsScreen: React.FC<ContactDetailsScreenProps> = ({ navigation 
       />
 
       <OnboardingCard>
-        <View
-          style={[
-            styles.noticePanel,
-            {
-              backgroundColor: colors.surfaceRaised,
-              borderColor: colors.border,
-              borderRadius: radii.primary,
-              padding: spacing.md,
-            },
-          ]}
-        >
-          <Typography variant="eyebrow" withDot>
-            Client profile fields
-          </Typography>
-          <View style={{ height: spacing.xs }} />
-          <Typography variant="body" style={{ color: colors.textSecondary }}>
-            We store the applicant email address and mobile number in international format for
-            profile updates and adviser follow-up.
-          </Typography>
-        </View>
-
-        <View style={{ height: spacing.md }} />
-
         <Input
           label="Mobile number"
-          placeholder="+27821234567"
+          placeholder="0821234567"
           keyboardType="phone-pad"
           value={primaryApplicant.mobileNumber}
           onChangeText={(value) => {
-            setPrimaryApplicantDraft({ mobileNumber: value });
-            if (showValidation && /^\+\d{10,15}$/.test(value.trim())) {
+            const sanitizedValue = value.replace(/[^\d]/g, '').slice(0, 10);
+            setPrimaryApplicantDraft({ mobileNumber: sanitizedValue });
+            if (showValidation && /^\d{10}$/.test(sanitizedValue)) {
               setShowValidation(false);
             }
           }}
           error={
             showValidation && !isPhoneValid
-              ? 'Enter the mobile number in international format, for example +27821234567.'
+              ? 'Enter a 10 digit mobile number, for example 0821234567.'
               : undefined
           }
         />
@@ -130,10 +108,6 @@ const ContactDetailsScreen: React.FC<ContactDetailsScreenProps> = ({ navigation 
   );
 };
 
-const styles = {
-  noticePanel: {
-    borderWidth: 1,
-  },
-};
+const styles = {};
 
 export default ContactDetailsScreen;

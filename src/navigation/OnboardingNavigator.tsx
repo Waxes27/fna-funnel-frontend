@@ -3,7 +3,6 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { OnboardingStep, useAppStore } from '../store/appStore';
 import {
-  AccountConnectionScreen,
   ConsentScreen,
   ContactDetailsScreen,
   DateOfBirthScreen,
@@ -30,7 +29,6 @@ export type OnboardingStackParamList = {
   RiskQuiz: undefined;
   Consent: undefined;
   NotificationPrompt: undefined;
-  AccountConnection: undefined;
   SetupSummary: undefined;
 };
 
@@ -48,7 +46,6 @@ const onboardingStepToRouteName: Record<OnboardingStep, keyof OnboardingStackPar
   riskQuiz: 'RiskQuiz',
   consent: 'Consent',
   notificationPrompt: 'NotificationPrompt',
-  accountConnection: 'AccountConnection',
   summary: 'SetupSummary',
 };
 
@@ -71,7 +68,6 @@ export const OnboardingNavigator = () => {
       <Stack.Screen name="RiskQuiz" component={RiskQuizScreen} />
       <Stack.Screen name="Consent" component={ConsentScreen} />
       <Stack.Screen name="NotificationPrompt" component={NotificationPromptScreen} />
-      <Stack.Screen name="AccountConnection" component={AccountConnectionScreen} />
       <Stack.Screen name="SetupSummary" component={SetupSummaryScreen} />
     </Stack.Navigator>
   );

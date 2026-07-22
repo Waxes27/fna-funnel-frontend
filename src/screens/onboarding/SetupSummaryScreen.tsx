@@ -1,5 +1,5 @@
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useState } from 'react';
+import { Alert, StyleSheet, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import {
@@ -10,6 +10,7 @@ import {
 } from '../../components/onboarding';
 import { Typography } from '../../components/Typography';
 import { OnboardingStackParamList } from '../../navigation/OnboardingNavigator';
+import { profileService } from '../../services/profileService';
 import { useAppStore } from '../../store/appStore';
 import { useTheme } from '../../theme';
 import { formatEnumLabel } from './profileDataOptions';
@@ -52,17 +53,6 @@ const formatAddress = (address: {
   ]
     .filter(Boolean)
     .join(', ');
-
-const formatConnectionChoice = (value: string) => {
-  switch (value) {
-    case 'secureLink':
-      return 'Secure account connection';
-    case 'later':
-      return 'Decide later';
-    default:
-      return 'Manual entry first';
-  }
-};
 
 const summaryRows = (profileDraft: ReturnType<typeof useAppStore.getState>['profileDraft']) => [
   {
@@ -144,22 +134,40 @@ const summaryRows = (profileDraft: ReturnType<typeof useAppStore.getState>['prof
         ? 'Same as applicant'
         : formatAddress(profileDraft.spouse.residentialAddress) || 'Pending',
   },
-  {
-    label: 'Account connection',
-    value: formatConnectionChoice(profileDraft.accountConnectionChoice),
-  },
 ];
 
 const SetupSummaryScreen: React.FC<SetupSummaryScreenProps> = ({ navigation }) => {
   const profileDraft = useAppStore((state) => state.profileDraft);
+  const user = useAppStore((state) => state.user);
   const completeOnboarding = useAppStore((state) => state.completeOnboarding);
+  const setProfile = useAppStore((state) => state.setProfile);
   const setOnboardingStep = useAppStore((state) => state.setOnboardingStep);
   const { colors, radii, spacing } = useTheme();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const rows = summaryRows(profileDraft);
 
+  const handleSubmit = async () => {
+    if (!user?.id || isSubmitting) {
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const savedProfile = await profileService.submitOnboardingProfile(user.id, profileDraft);
+      setProfile(savedProfile);
+      completeOnboarding();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'We could not save your onboarding details.';
+      Alert.alert('Unable to continue', message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
-    <OnboardingShell step={13} totalSteps={13}>
+    <OnboardingShell step={12} totalSteps={12}>
       <OnboardingHeader
         eyebrow="You're ready"
         title="Your first financial summary is prepared."
@@ -266,12 +274,11 @@ const SetupSummaryScreen: React.FC<SetupSummaryScreenProps> = ({ navigation }) =
 
       <OnboardingActionBar
         primaryTitle="See my financial summary"
-        onPrimaryPress={completeOnboarding}
-        secondaryTitle="Review details"
-        onSecondaryPress={() => {
-          setOnboardingStep('financialSnapshot');
-          navigation.navigate('FinancialSnapshot');
+        onPrimaryPress={() => {
+          handleSubmit().catch(() => undefined);
         }}
+        primaryLoading={isSubmitting}
+        primaryDisabled={isSubmitting || !user?.id}
       />
     </OnboardingShell>
   );

@@ -47,7 +47,7 @@ const LegalNameScreen: React.FC<LegalNameScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <OnboardingShell step={4} totalSteps={13}>
+    <OnboardingShell step={4} totalSteps={12}>
       <OnboardingHeader
         eyebrow="Profile basics"
         title="What name appears on your identity document?"

@@ -38,7 +38,7 @@ const NotificationPromptScreen: React.FC<NotificationPromptScreenProps> = ({ nav
   const { colors, radii, spacing } = useTheme();
 
   return (
-    <OnboardingShell step={11} totalSteps={13}>
+    <OnboardingShell step={11} totalSteps={12}>
       <OnboardingHeader
         eyebrow="Stay informed"
         title="Choose how Momentum keeps you updated."
@@ -46,31 +46,6 @@ const NotificationPromptScreen: React.FC<NotificationPromptScreenProps> = ({ nav
       />
 
       <OnboardingCard>
-        <View
-          style={[
-            styles.statusCard,
-            {
-              backgroundColor: colors.ink,
-              borderRadius: radii.primary,
-              padding: spacing.md,
-            },
-          ]}
-        >
-          <Typography variant="eyebrow" style={{ color: colors.canvas }}>
-            Current preference
-          </Typography>
-          <View style={{ height: spacing.xs }} />
-          <Typography variant="h3" style={{ color: colors.canvas }}>
-            {profileDraft.notificationsEnabled ? 'Alerts enabled' : 'Quiet mode for now'}
-          </Typography>
-          <View style={{ height: spacing.sm }} />
-          <Typography variant="body" style={{ color: colors.dustTaupe }}>
-            You can change this later in your profile without affecting your financial summary.
-          </Typography>
-        </View>
-
-        <View style={{ height: spacing.md }} />
-
         <View style={{ gap: spacing.sm }}>
           {notificationChoices.map((choice) => {
             const isSelected = profileDraft.notificationsEnabled === choice.value;
@@ -80,7 +55,12 @@ const NotificationPromptScreen: React.FC<NotificationPromptScreenProps> = ({ nav
                 key={choice.title}
                 accessibilityRole="button"
                 accessibilityState={{ selected: isSelected }}
-                onPress={() => setProfileDraft({ notificationsEnabled: choice.value })}
+                onPress={() =>
+                  setProfileDraft({
+                    notificationsEnabled: choice.value,
+                    notificationPreferenceSet: true,
+                  })
+                }
                 style={({ pressed }) => [
                   styles.choiceCard,
                   {
@@ -106,8 +86,8 @@ const NotificationPromptScreen: React.FC<NotificationPromptScreenProps> = ({ nav
       <OnboardingActionBar
         primaryTitle="Continue"
         onPrimaryPress={() => {
-          setOnboardingStep('accountConnection');
-          navigation.navigate('AccountConnection');
+          setOnboardingStep('summary');
+          navigation.navigate('SetupSummary');
         }}
         secondaryTitle="Back"
         onSecondaryPress={() => {
@@ -120,9 +100,6 @@ const NotificationPromptScreen: React.FC<NotificationPromptScreenProps> = ({ nav
 };
 
 const styles = StyleSheet.create({
-  statusCard: {
-    width: '100%',
-  },
   choiceCard: {
     borderWidth: 1,
   },

@@ -2,7 +2,14 @@ import React from 'react';
 import { fireEvent, render } from '@testing-library/react-native';
 
 import SetupSummaryScreen from '../onboarding/SetupSummaryScreen';
+import { profileService } from '../../services/profileService';
 import { useAppStore } from '../../store/appStore';
+
+jest.mock('../../services/profileService', () => ({
+  profileService: {
+    submitOnboardingProfile: jest.fn(),
+  },
+}));
 
 const resetAppStore = () => {
   const existingDraft = useAppStore.getState().profileDraft;
@@ -10,6 +17,13 @@ const resetAppStore = () => {
     isAuthenticated: true,
     isOnboardingComplete: false,
     onboardingStep: 'summary',
+    user: {
+      id: 'user-1',
+      email: 'jordan@example.com',
+      role: 'CLIENT',
+      token: 'token-123',
+      type: 'Bearer',
+    } as any,
     profileDraft: {
       ...existingDraft,
       goals: ['Reduce debt'],
@@ -26,7 +40,7 @@ const resetAppStore = () => {
         occupation: 'Engineer',
         grossMonthlyIncome: '45000',
         emailAddress: 'jordan@example.com',
-        mobileNumber: '+27821234567',
+        mobileNumber: '0821234567',
         residentialAddress: {
           ...existingDraft.primaryApplicant.residentialAddress,
           addressLine1: '12 Main Road',
@@ -43,13 +57,19 @@ const resetAppStore = () => {
       },
       consentAccepted: true,
       notificationsEnabled: true,
-      accountConnectionChoice: 'manual',
+      notificationPreferenceSet: true,
     },
   });
 };
 
 describe('SetupSummaryScreen', () => {
   beforeEach(() => {
+    (profileService.submitOnboardingProfile as jest.Mock).mockResolvedValue({
+      id: 'profile-1',
+      userId: 'user-1',
+      fullName: 'Jordan Client',
+      email: 'jordan@example.com',
+    });
     resetAppStore();
   });
 
@@ -57,13 +77,21 @@ describe('SetupSummaryScreen', () => {
     resetAppStore();
   });
 
-  it('completes onboarding and exits to the main app state', () => {
+  it('submits onboarding details before entering the main app state', async () => {
     const navigation = { navigate: jest.fn() };
 
-    const { getByText } = render(<SetupSummaryScreen navigation={navigation as any} />);
+    const { findByText, getByText } = render(<SetupSummaryScreen navigation={navigation as any} />);
 
     fireEvent.press(getByText('See my financial summary'));
 
+    await findByText('See my financial summary');
+
+    expect(profileService.submitOnboardingProfile).toHaveBeenCalledWith(
+      'user-1',
+      expect.objectContaining({
+        goals: ['Reduce debt'],
+      }),
+    );
     expect(useAppStore.getState().isOnboardingComplete).toBe(true);
     expect(useAppStore.getState().onboardingStep).toBe('summary');
   });

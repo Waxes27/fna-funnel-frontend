@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -34,17 +34,6 @@ const HouseholdEmploymentScreen: React.FC<HouseholdEmploymentScreenProps> = ({ n
   const isOccupationValid = primaryApplicant.occupation.trim().length > 0;
   const isIncomeValid = /^\d+$/.test(primaryApplicant.grossMonthlyIncome.trim());
   const isValid = isMaritalStatusValid && isOccupationValid && isIncomeValid;
-
-  const employmentSnapshot = useMemo(() => {
-    const income = primaryApplicant.grossMonthlyIncome
-      ? `R ${Number(primaryApplicant.grossMonthlyIncome).toLocaleString('en-ZA')}`
-      : 'Pending income';
-    const maritalStatus = primaryApplicant.maritalStatus
-      ? formatEnumLabel(primaryApplicant.maritalStatus)
-      : 'Pending marital status';
-
-    return `${maritalStatus} • ${income}`;
-  }, [primaryApplicant.grossMonthlyIncome, primaryApplicant.maritalStatus]);
 
   const handleContinue = () => {
     if (!isValid) {
@@ -114,7 +103,7 @@ const HouseholdEmploymentScreen: React.FC<HouseholdEmploymentScreenProps> = ({ n
   );
 
   return (
-    <OnboardingShell step={7} totalSteps={13}>
+    <OnboardingShell step={7} totalSteps={12}>
       <OnboardingHeader
         eyebrow="Household and work"
         title="Tell us about your current setup."
@@ -122,28 +111,6 @@ const HouseholdEmploymentScreen: React.FC<HouseholdEmploymentScreenProps> = ({ n
       />
 
       <OnboardingCard>
-        <View
-          style={[
-            styles.summaryPanel,
-            { backgroundColor: colors.ink, borderRadius: radii.primary, padding: spacing.md },
-          ]}
-        >
-          <Typography variant="eyebrow" style={{ color: colors.canvas }}>
-            Current snapshot
-          </Typography>
-          <View style={{ height: spacing.xs }} />
-          <Typography variant="h3" style={{ color: colors.canvas }}>
-            {employmentSnapshot}
-          </Typography>
-          <View style={{ height: spacing.sm }} />
-          <Typography variant="body" style={{ color: colors.dustTaupe }}>
-            Add the applicant marital status, occupation, and gross monthly income required by the
-            profile model.
-          </Typography>
-        </View>
-
-        <View style={{ height: spacing.md }} />
-
         {renderSelectableOptions(
           'Marital status',
           maritalStatusOptions,
@@ -189,23 +156,6 @@ const HouseholdEmploymentScreen: React.FC<HouseholdEmploymentScreenProps> = ({ n
           }
         />
 
-        <View
-          style={[
-            styles.currencyPanel,
-            {
-              backgroundColor: colors.surfaceRaised,
-              borderColor: colors.border,
-              borderRadius: radii.primary,
-              padding: spacing.md,
-            },
-          ]}
-        >
-          <Typography variant="h4">Income currency</Typography>
-          <View style={{ height: spacing.xs }} />
-          <Typography variant="body" style={{ color: colors.textSecondary }}>
-            This onboarding flow defaults the applicant income currency to ZAR.
-          </Typography>
-        </View>
       </OnboardingCard>
 
       <OnboardingActionBar
@@ -223,13 +173,6 @@ const HouseholdEmploymentScreen: React.FC<HouseholdEmploymentScreenProps> = ({ n
 };
 
 const styles = StyleSheet.create({
-  summaryPanel: {
-    width: '100%',
-  },
-  currencyPanel: {
-    width: '100%',
-    borderWidth: 1,
-  },
   optionGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',

@@ -50,7 +50,7 @@ const RiskQuizScreen: React.FC<RiskQuizScreenProps> = ({ navigation }) => {
       spouse.occupation.trim().length > 0 &&
       /^\d+$/.test(spouse.grossMonthlyIncome.trim()) &&
       /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(spouse.emailAddress.trim()) &&
-      /^\+\d{10,15}$/.test(spouse.mobileNumber.trim()) &&
+      /^\d{10}$/.test(spouse.mobileNumber.trim()) &&
       (spouse.sameAsPrimaryApplicant ||
         (spouse.residentialAddress.addressLine1.trim().length >= 5 &&
           spouse.residentialAddress.suburb.trim().length > 0 &&
@@ -70,7 +70,7 @@ const RiskQuizScreen: React.FC<RiskQuizScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <OnboardingShell step={9} totalSteps={13}>
+    <OnboardingShell step={9} totalSteps={12}>
       <OnboardingHeader
         eyebrow="Spouse profile"
         title={
@@ -381,15 +381,20 @@ const RiskQuizScreen: React.FC<RiskQuizScreenProps> = ({ navigation }) => {
 
             <Input
               label="Spouse mobile number"
-              placeholder="+27821234567"
+              placeholder="0821234567"
               keyboardType="phone-pad"
               value={spouse.mobileNumber}
-              onChangeText={(value) =>
-                setSpouseDraft({ applicable: true, maritalStatus: 'MARRIED', mobileNumber: value })
-              }
+              onChangeText={(value) => {
+                const sanitizedValue = value.replace(/[^\d]/g, '').slice(0, 10);
+                setSpouseDraft({
+                  applicable: true,
+                  maritalStatus: 'MARRIED',
+                  mobileNumber: sanitizedValue,
+                });
+              }}
               error={
-                showValidation && !/^\+\d{10,15}$/.test(spouse.mobileNumber.trim())
-                  ? 'Enter the spouse mobile number in international format.'
+                showValidation && !/^\d{10}$/.test(spouse.mobileNumber.trim())
+                  ? 'Enter the spouse mobile number as 10 digits.'
                   : undefined
               }
             />

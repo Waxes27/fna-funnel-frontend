@@ -59,7 +59,7 @@ const GoalsScreen: React.FC<GoalsScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <OnboardingShell step={2} totalSteps={13}>
+    <OnboardingShell step={2} totalSteps={12}>
       <OnboardingHeader
         eyebrow="Personalize your plan"
         title="What brought you here?"

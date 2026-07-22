@@ -17,10 +17,7 @@ export type OnboardingStep =
   | 'riskQuiz'
   | 'consent'
   | 'notificationPrompt'
-  | 'accountConnection'
   | 'summary';
-
-export type AccountConnectionChoice = 'manual' | 'secureLink' | 'later';
 
 export interface OnboardingResidentialAddressDraft {
   addressLine1: string;
@@ -60,7 +57,7 @@ export interface OnboardingProfileDraft {
   spouse: OnboardingSpouseDraft;
   consentAccepted: boolean;
   notificationsEnabled: boolean;
-  accountConnectionChoice: AccountConnectionChoice;
+  notificationPreferenceSet: boolean;
 }
 
 type AuthenticatedStateOptions = {
@@ -140,7 +137,7 @@ const defaultProfileDraft: OnboardingProfileDraft = {
   spouse: createEmptySpouseDraft(),
   consentAccepted: false,
   notificationsEnabled: false,
-  accountConnectionChoice: 'manual',
+  notificationPreferenceSet: false,
 };
 
 const splitFullName = (fullName?: string | null) => {
@@ -266,7 +263,7 @@ export const useAppStore = create<AppState>((set) => ({
         spouse: state.profileDraft.spouse,
         consentAccepted: state.profileDraft.consentAccepted,
         notificationsEnabled: state.profileDraft.notificationsEnabled,
-        accountConnectionChoice: state.profileDraft.accountConnectionChoice,
+        notificationPreferenceSet: state.profileDraft.notificationPreferenceSet,
       },
     })),
   setProfileDraft: (patch) =>

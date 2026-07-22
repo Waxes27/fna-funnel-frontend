@@ -37,7 +37,7 @@ const getResumeOnboardingStep = (profileDraft: OnboardingProfileDraft): Onboardi
   }
 
   const hasContactDetails =
-    /^\+\d{10,15}$/.test(profileDraft.primaryApplicant.mobileNumber.trim()) &&
+    /^\d{10}$/.test(profileDraft.primaryApplicant.mobileNumber.trim()) &&
     profileDraft.primaryApplicant.emailAddress.trim().length > 0;
 
   if (!hasContactDetails) {
@@ -80,7 +80,7 @@ const getResumeOnboardingStep = (profileDraft: OnboardingProfileDraft): Onboardi
       profileDraft.spouse.occupation.trim().length > 0 &&
       /^\d+$/.test(profileDraft.spouse.grossMonthlyIncome.trim()) &&
       /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profileDraft.spouse.emailAddress.trim()) &&
-      /^\+\d{10,15}$/.test(profileDraft.spouse.mobileNumber.trim()) &&
+      /^\d{10}$/.test(profileDraft.spouse.mobileNumber.trim()) &&
       (profileDraft.spouse.sameAsPrimaryApplicant ||
         (spouseAddress.addressLine1.trim().length >= 5 &&
           spouseAddress.suburb.trim().length > 0 &&
@@ -97,7 +97,11 @@ const getResumeOnboardingStep = (profileDraft: OnboardingProfileDraft): Onboardi
     return 'consent';
   }
 
-  return 'accountConnection';
+  if (!profileDraft.notificationPreferenceSet) {
+    return 'notificationPrompt';
+  }
+
+  return 'summary';
 };
 
 const TagPill: React.FC<{ label: string }> = ({ label }) => {

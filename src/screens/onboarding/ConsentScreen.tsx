@@ -19,12 +19,6 @@ type ConsentScreenProps = Pick<
   'navigation'
 >;
 
-const consentBullets = [
-  'Use your answers to tailor your financial summary and product guidance.',
-  'Store onboarding inputs securely so you can resume across devices.',
-  'Share the captured context with your adviser for follow-up planning.',
-];
-
 const ConsentScreen: React.FC<ConsentScreenProps> = ({ navigation }) => {
   const profileDraft = useAppStore((state) => state.profileDraft);
   const setProfileDraft = useAppStore((state) => state.setProfileDraft);
@@ -36,7 +30,7 @@ const ConsentScreen: React.FC<ConsentScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <OnboardingShell step={10} totalSteps={13}>
+    <OnboardingShell step={10} totalSteps={12}>
       <OnboardingHeader
         eyebrow="Client consent"
         title="Review how your onboarding data is used."
@@ -44,32 +38,6 @@ const ConsentScreen: React.FC<ConsentScreenProps> = ({ navigation }) => {
       />
 
       <OnboardingCard>
-        <View
-          style={[
-            styles.noticeCard,
-            {
-              backgroundColor: colors.surface,
-              borderRadius: radii.primary,
-              borderColor: colors.border,
-              padding: spacing.md,
-            },
-          ]}
-        >
-          <Typography variant="eyebrow" withDot dotColor={colors.signalOrange}>
-            Before you continue
-          </Typography>
-          <View style={{ height: spacing.sm }} />
-          <View style={{ gap: spacing.sm }}>
-            {consentBullets.map((item) => (
-              <Typography key={item} variant="body" style={{ color: colors.textSecondary }}>
-                • {item}
-              </Typography>
-            ))}
-          </View>
-        </View>
-
-        <View style={{ height: spacing.md }} />
-
         <Pressable
           accessibilityRole="checkbox"
           accessibilityState={{ checked: profileDraft.consentAccepted }}
@@ -142,10 +110,6 @@ const ConsentScreen: React.FC<ConsentScreenProps> = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  noticeCard: {
-    width: '100%',
-    borderWidth: 1,
-  },
   checkboxRow: {
     width: '100%',
     borderWidth: 1,
