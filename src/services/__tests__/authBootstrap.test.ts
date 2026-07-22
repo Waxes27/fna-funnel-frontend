@@ -1,7 +1,9 @@
 import { apiService } from '../apiService';
+import { AuthError } from '../authErrors';
 import {
   clearPersistedAuthSession,
   loadPersistedAuthSession,
+  savePersistedAuthSession,
 } from '../authSessionStore';
 import { authService } from '../authService';
 import { bootstrapAuthSession } from '../authBootstrap';
@@ -9,6 +11,7 @@ import { bootstrapAuthSession } from '../authBootstrap';
 jest.mock('../authSessionStore', () => ({
   clearPersistedAuthSession: jest.fn(),
   loadPersistedAuthSession: jest.fn(),
+  savePersistedAuthSession: jest.fn(),
 }));
 
 jest.mock('../authService', () => ({
@@ -19,12 +22,14 @@ jest.mock('../authService', () => ({
 
 const mockedLoadPersistedAuthSession = loadPersistedAuthSession as jest.Mock;
 const mockedClearPersistedAuthSession = clearPersistedAuthSession as jest.Mock;
+const mockedSavePersistedAuthSession = savePersistedAuthSession as jest.Mock;
 const mockedResolveCurrentUserSession = authService.resolveCurrentUserSession as jest.Mock;
 
 describe('bootstrapAuthSession', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     apiService.setToken(null);
+    mockedSavePersistedAuthSession.mockResolvedValue(undefined);
   });
 
   it('returns an authenticated session when the persisted session is valid', async () => {
@@ -69,6 +74,13 @@ describe('bootstrapAuthSession', () => {
     });
 
     expect(apiService.getToken()).toBe('persisted-token');
+    expect(mockedSavePersistedAuthSession).toHaveBeenCalledWith({
+      email: 'client@example.com',
+      id: 'user-1',
+      role: 'CLIENT',
+      token: 'persisted-token',
+      type: 'Bearer',
+    });
     expect(mockedResolveCurrentUserSession).toHaveBeenCalledWith({
       email: 'client@example.com',
       id: 'user-1',
@@ -103,9 +115,27 @@ describe('bootstrapAuthSession', () => {
 
     await expect(bootstrapAuthSession()).resolves.toEqual({
       status: 'anonymous',
+      message: 'Your Keycloak session ended. Please sign in again.',
     });
 
     expect(mockedClearPersistedAuthSession).toHaveBeenCalled();
+    expect(apiService.getToken()).toBeNull();
+  });
+
+  it('returns a user-facing message when the persisted session cannot be restored', async () => {
+    mockedLoadPersistedAuthSession.mockRejectedValue(
+      new AuthError('SESSION_RESTORE_FAILED', 'Invalid stored session', {
+        shouldClearSession: true,
+        userMessage: 'We could not restore your saved session. Please sign in again.',
+      }),
+    );
+
+    await expect(bootstrapAuthSession()).resolves.toEqual({
+      status: 'anonymous',
+      message: 'We could not restore your saved session. Please sign in again.',
+    });
+
+    expect(mockedClearPersistedAuthSession).toHaveBeenCalledTimes(1);
     expect(apiService.getToken()).toBeNull();
   });
 });

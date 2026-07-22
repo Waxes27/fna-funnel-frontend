@@ -8,9 +8,12 @@ type RetryableAxiosRequestConfig = AxiosRequestConfig & {
   _retryCount?: number;
 };
 
+type UnauthorizedHandler = (error: AxiosError) => void;
+
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
 const DEFAULT_TIMEOUT = 10000;
 const MAX_RETRIES = 2;
+let unauthorizedHandler: UnauthorizedHandler | null = null;
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -43,6 +46,10 @@ const isRetryableError = (error: AxiosError) => {
 apiClient.instance.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
+    if (error.response?.status === 401 && getAuthToken()) {
+      unauthorizedHandler?.(error);
+    }
+
     const config = error.config as RetryableAxiosRequestConfig | undefined;
 
     if (!config || !isRetryableError(error)) {
@@ -66,6 +73,10 @@ class ApiService {
   setToken(token: string | null) {
     setAuthToken(token);
     apiClient.setSecurityData(token);
+  }
+
+  setUnauthorizedHandler(handler: UnauthorizedHandler | null) {
+    unauthorizedHandler = handler;
   }
 
   getToken() {

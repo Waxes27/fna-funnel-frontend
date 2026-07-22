@@ -1,11 +1,13 @@
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
+import { AuthError } from '../authErrors';
 import {
   clearPersistedAuthSession,
   loadPersistedAuthSession,
   savePersistedAuthSession,
 } from '../authSessionStore';
+import { keycloakIssuer } from '../keycloakAuth';
 
 jest.mock('expo-secure-store', () => ({
   deleteItemAsync: jest.fn(),
@@ -14,6 +16,24 @@ jest.mock('expo-secure-store', () => ({
 }));
 
 const mockSecureStore = SecureStore as jest.Mocked<typeof SecureStore>;
+
+const createJwt = (claims: Record<string, unknown> = {}) => {
+  const encode = (value: Record<string, unknown>) =>
+    Buffer.from(JSON.stringify(value)).toString('base64url');
+
+  return [
+    encode({ alg: 'none', typ: 'JWT' }),
+    encode({
+      email: 'client@example.com',
+      exp: Math.floor(Date.now() / 1000) + 3600,
+      iss: keycloakIssuer,
+      realm_access: { roles: ['ROLE_CLIENT'] },
+      sub: 'user-1',
+      ...claims,
+    }),
+    'signature',
+  ].join('.');
+};
 
 describe('authSessionStore', () => {
   beforeEach(() => {
@@ -29,7 +49,7 @@ describe('authSessionStore', () => {
       email: 'client@example.com',
       id: 'user-1',
       role: 'CLIENT',
-      token: 'access-token',
+      token: createJwt(),
       type: 'Bearer',
     };
 
@@ -62,7 +82,7 @@ describe('authSessionStore', () => {
       email: 'client@example.com',
       id: 'user-1',
       role: 'CLIENT',
-      token: 'access-token',
+      token: createJwt(),
       type: 'Bearer',
     };
 
@@ -91,5 +111,18 @@ describe('authSessionStore', () => {
     expect(mockSecureStore.setItemAsync).not.toHaveBeenCalled();
     expect(mockSecureStore.getItemAsync).not.toHaveBeenCalled();
     expect(mockSecureStore.deleteItemAsync).not.toHaveBeenCalled();
+  });
+
+  it('clears corrupted persisted auth sessions and surfaces a restore error', async () => {
+    mockSecureStore.getItemAsync.mockResolvedValueOnce('{not-json');
+
+    await expect(loadPersistedAuthSession()).rejects.toEqual(
+      expect.objectContaining<AuthError>({
+        code: 'SESSION_RESTORE_FAILED',
+        name: 'AuthError',
+      }),
+    );
+
+    expect(mockSecureStore.deleteItemAsync).toHaveBeenCalledWith('auth.session');
   });
 });

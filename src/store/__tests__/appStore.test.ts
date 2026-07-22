@@ -116,7 +116,7 @@ describe('appStore onboarding state', () => {
     expect(useAppStore.getState().onboardingStep).toBe('summary');
   });
 
-  it('clears the API token on logout', () => {
+  it('clears the API token on logout', async () => {
     useAppStore.getState().login({
       id: 'user-2',
       email: 'logout@example.com',
@@ -124,11 +124,30 @@ describe('appStore onboarding state', () => {
       token: 'token-to-clear',
     });
 
-    useAppStore.getState().logout();
+    await useAppStore.getState().logout();
 
     expect(apiService.getToken()).toBeNull();
     expect(clearPersistedAuthSession).toHaveBeenCalledTimes(1);
     expect(useAppStore.getState().isAuthenticated).toBe(false);
     expect(useAppStore.getState().isAuthBootstrapping).toBe(false);
+  });
+
+  it('stores a user-facing auth message when the session expires', async () => {
+    useAppStore.getState().login({
+      id: 'user-3',
+      email: 'expired@example.com',
+      role: 'CLIENT',
+      token: 'expired-token',
+    });
+
+    await useAppStore
+      .getState()
+      .expireAuthSession('Your Keycloak session ended. Please sign in again.');
+
+    expect(apiService.getToken()).toBeNull();
+    expect(useAppStore.getState().isAuthenticated).toBe(false);
+    expect(useAppStore.getState().authStatusMessage).toBe(
+      'Your Keycloak session ended. Please sign in again.',
+    );
   });
 });

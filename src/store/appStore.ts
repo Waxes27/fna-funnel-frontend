@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { JwtResponse, ClientProfileDTO } from '../../clients/fNAPlatformAPIClient/models';
 import { apiService } from '../services/apiService';
+import { authLogger } from '../services/authLogger';
 import { normalizeAuthenticatedUser, normalizeAuthRole } from '../services/authUser';
 import { clearPersistedAuthSession } from '../services/authSessionStore';
 
@@ -69,6 +70,7 @@ type AuthenticatedStateOptions = {
 };
 
 interface AppState {
+  authStatusMessage: string | null;
   isAuthenticated: boolean;
   isAuthBootstrapping: boolean;
   isOnboardingComplete: boolean;
@@ -77,9 +79,12 @@ interface AppState {
   profile: ClientProfileDTO | null;
   profileDraft: OnboardingProfileDraft;
   login: (user: JwtResponse, options?: AuthenticatedStateOptions) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
+  expireAuthSession: (message?: string) => Promise<void>;
   applyAuthenticatedUser: (user: JwtResponse, options?: AuthenticatedStateOptions) => void;
+  clearAuthStatusMessage: () => void;
   finishAuthBootstrap: () => void;
+  setAuthStatusMessage: (message: string | null) => void;
   setOnboardingStep: (step: OnboardingStep) => void;
   completeOnboarding: () => void;
   setProfile: (profile: ClientProfileDTO) => void;
@@ -181,32 +186,41 @@ const createProfileDraftFromProfile = (
   };
 };
 
-const applyUserToState = (
-  user: JwtResponse,
-  options: AuthenticatedStateOptions = {},
-) => {
+const applyUserToState = (user: JwtResponse, options: AuthenticatedStateOptions = {}) => {
   const normalizedUser = normalizeAuthenticatedUser(user);
   const isClientUser = normalizeAuthRole(normalizedUser.role) === 'CLIENT';
-  const isOnboardingComplete =
-    options.isOnboardingComplete ?? !isClientUser;
+  const isOnboardingComplete = options.isOnboardingComplete ?? !isClientUser;
   const resolvedProfile = options.profile ?? null;
 
   apiService.setToken(normalizedUser.token ?? null);
 
   return {
+    authStatusMessage: null,
     isAuthenticated: true,
     isAuthBootstrapping: false,
     isOnboardingComplete,
     onboardingStep: isOnboardingComplete
       ? ('summary' as OnboardingStep)
-      : options.onboardingStep ?? defaultOnboardingStep,
+      : (options.onboardingStep ?? defaultOnboardingStep),
     user: normalizedUser,
     profile: resolvedProfile,
     profileDraft: createProfileDraftFromProfile(resolvedProfile, normalizedUser.email ?? ''),
   };
 };
 
+const createSignedOutState = (authStatusMessage: string | null = null) => ({
+  authStatusMessage,
+  isAuthenticated: false,
+  isAuthBootstrapping: false,
+  isOnboardingComplete: false,
+  onboardingStep: defaultOnboardingStep,
+  profile: null,
+  profileDraft: defaultProfileDraft,
+  user: null,
+});
+
 export const useAppStore = create<AppState>((set) => ({
+  authStatusMessage: null,
   isAuthenticated: false,
   isAuthBootstrapping: true,
   isOnboardingComplete: false,
@@ -216,19 +230,26 @@ export const useAppStore = create<AppState>((set) => ({
   profileDraft: defaultProfileDraft,
   login: (user, options) => set(() => applyUserToState(user, options)),
   applyAuthenticatedUser: (user, options) => set(() => applyUserToState(user, options)),
+  clearAuthStatusMessage: () => set({ authStatusMessage: null }),
   finishAuthBootstrap: () => set({ isAuthBootstrapping: false }),
-  logout: () => {
+  setAuthStatusMessage: (authStatusMessage) => set({ authStatusMessage }),
+  logout: async () => {
     apiService.setToken(null);
-    void clearPersistedAuthSession();
-    set({
-      isAuthenticated: false,
-      isAuthBootstrapping: false,
-      isOnboardingComplete: false,
-      onboardingStep: defaultOnboardingStep,
-      user: null,
-      profile: null,
-      profileDraft: defaultProfileDraft,
-    });
+    try {
+      await clearPersistedAuthSession();
+    } catch (error) {
+      authLogger.warn('Failed to clear persisted auth session during logout', error);
+    }
+    set(createSignedOutState());
+  },
+  expireAuthSession: async (message = 'Your Keycloak session ended. Please sign in again.') => {
+    apiService.setToken(null);
+    try {
+      await clearPersistedAuthSession();
+    } catch (error) {
+      authLogger.warn('Failed to clear persisted auth session after session expiry', error);
+    }
+    set(createSignedOutState(message));
   },
   setOnboardingStep: (onboardingStep) => set({ onboardingStep }),
   completeOnboarding: () =>

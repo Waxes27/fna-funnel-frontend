@@ -1,9 +1,15 @@
-import { ClientProfileDTO, JwtResponse, LoginRequest, LoginResponse, SignupRequest, SignupResponse } from '../../clients/fNAPlatformAPIClient/apis';
-import { apiClient, apiService } from './apiService';
 import {
-  normalizeAuthenticatedUser,
-  normalizeAuthRole,
-} from './authUser';
+  ClientProfileDTO,
+  JwtResponse,
+  LoginRequest,
+  LoginResponse,
+  SignupRequest,
+  SignupResponse,
+} from '../../clients/fNAPlatformAPIClient/apis';
+import { apiClient, apiService } from './apiService';
+import { authLogger } from './authLogger';
+import { normalizeAuthenticatedUser, normalizeAuthRole } from './authUser';
+import { validateKeycloakTokenUser } from './keycloakAuth';
 import { profileService } from './profileService';
 
 export type ResolvedAuthSession = {
@@ -50,13 +56,16 @@ const hasMeaningfulProfileValue = (value: unknown): boolean => {
   return false;
 };
 
-const hasClientProfile = (profile: ClientProfileDTO | null | undefined): profile is ClientProfileDTO =>
-  Boolean(profile) && hasMeaningfulProfileValue(profile);
+const hasClientProfile = (
+  profile: ClientProfileDTO | null | undefined,
+): profile is ClientProfileDTO => Boolean(profile) && hasMeaningfulProfileValue(profile);
 
-const resolveClientAuthSession = async (
-  user: JwtResponse,
-): Promise<ResolvedAuthSession> => {
+const resolveClientAuthSession = async (user: JwtResponse): Promise<ResolvedAuthSession> => {
   if (normalizeAuthRole(user.role) !== 'CLIENT') {
+    authLogger.info('Skipping profile lookup for non-client user', {
+      role: user.role,
+      userId: user.id,
+    });
     return {
       user,
       profile: null,
@@ -65,6 +74,9 @@ const resolveClientAuthSession = async (
   }
 
   if (!user.id) {
+    authLogger.warn('Client user is missing an ID; onboarding will be required', {
+      email: user.email,
+    });
     return {
       user,
       profile: null,
@@ -73,6 +85,9 @@ const resolveClientAuthSession = async (
   }
 
   try {
+    authLogger.info('Loading client profile during auth resolution', {
+      userId: user.id,
+    });
     const profile = await profileService.getProfile(user.id);
     const resolvedProfile = hasClientProfile(profile) ? profile : null;
 
@@ -83,6 +98,9 @@ const resolveClientAuthSession = async (
     };
   } catch (error: any) {
     if (error?.status === 404) {
+      authLogger.info('No client profile exists yet; onboarding remains incomplete', {
+        userId: user.id,
+      });
       return {
         user,
         profile: null,
@@ -108,12 +126,25 @@ export const authService = {
   },
 
   resolveCurrentUserSession: async (tokenUser: JwtResponse): Promise<ResolvedAuthSession> => {
-    apiService.setToken(tokenUser.token ?? null);
+    const validatedTokenUser = validateKeycloakTokenUser(tokenUser);
+    authLogger.info('Resolving authenticated session', {
+      role: validatedTokenUser.role,
+      userId: validatedTokenUser.id,
+    });
+    apiService.setToken(validatedTokenUser.token ?? null);
 
     try {
       const backendUser = await authService.currentUser();
-      return resolveClientAuthSession(mergeAuthenticatedUser(tokenUser, backendUser));
+      const mergedUser = mergeAuthenticatedUser(validatedTokenUser, backendUser);
+      authLogger.info('Resolved current user from backend', {
+        role: mergedUser.role,
+        userId: mergedUser.id,
+      });
+      return resolveClientAuthSession(mergedUser);
     } catch (error) {
+      authLogger.error('Failed to resolve authenticated session', error, {
+        userId: validatedTokenUser.id,
+      });
       apiService.setToken(null);
       throw error;
     }

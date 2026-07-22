@@ -39,7 +39,10 @@ type RootNavigatorStoreState = {
   isAuthBootstrapping: boolean;
   isOnboardingComplete: boolean;
   applyAuthenticatedUser: jest.Mock;
+  clearAuthStatusMessage: jest.Mock;
+  expireAuthSession: jest.Mock;
   finishAuthBootstrap: jest.Mock;
+  setAuthStatusMessage: jest.Mock;
 };
 
 const mockUseAppStore = useAppStore as unknown as jest.Mock;
@@ -52,7 +55,10 @@ const createState = (
   isAuthBootstrapping: false,
   isOnboardingComplete: false,
   applyAuthenticatedUser: jest.fn(),
+  clearAuthStatusMessage: jest.fn(),
+  expireAuthSession: jest.fn(),
   finishAuthBootstrap: jest.fn(),
+  setAuthStatusMessage: jest.fn(),
   ...overrides,
 });
 
@@ -184,5 +190,25 @@ describe('RootNavigator', () => {
     });
 
     expect(state.applyAuthenticatedUser).not.toHaveBeenCalled();
+  });
+
+  it('stores an auth message when bootstrap returns an anonymous result with feedback', async () => {
+    mockedBootstrapAuthSession.mockResolvedValueOnce({
+      status: 'anonymous',
+      message: 'Your Keycloak session ended. Please sign in again.',
+    });
+
+    const { state } = renderWithState({
+      isAuthenticated: false,
+      isAuthBootstrapping: true,
+      isOnboardingComplete: false,
+    });
+
+    await waitFor(() => {
+      expect(state.setAuthStatusMessage).toHaveBeenCalledWith(
+        'Your Keycloak session ended. Please sign in again.',
+      );
+      expect(state.finishAuthBootstrap).toHaveBeenCalledTimes(1);
+    });
   });
 });

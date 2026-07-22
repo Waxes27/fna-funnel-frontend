@@ -1,5 +1,6 @@
 import { authService } from '../authService';
 import { apiClient, apiService } from '../apiService';
+import { keycloakIssuer } from '../keycloakAuth';
 import { profileService } from '../profileService';
 
 jest.mock('../profileService', () => ({
@@ -10,12 +11,30 @@ jest.mock('../profileService', () => ({
 
 const mockGetProfile = profileService.getProfile as jest.Mock;
 
+const createJwt = (claims: Record<string, unknown> = {}) => {
+  const encode = (value: Record<string, unknown>) =>
+    Buffer.from(JSON.stringify(value)).toString('base64url');
+
+  return [
+    encode({ alg: 'none', typ: 'JWT' }),
+    encode({
+      email: 'token@example.com',
+      exp: Math.floor(Date.now() / 1000) + 3600,
+      iss: keycloakIssuer,
+      realm_access: { roles: ['ROLE_CLIENT'] },
+      sub: 'token-user-id',
+      ...claims,
+    }),
+    'signature',
+  ].join('.');
+};
+
 describe('authService.resolveCurrentUserSession', () => {
   const tokenUser = {
     email: 'token@example.com',
     id: 'token-user-id',
     role: 'CLIENT',
-    token: 'access-token',
+    token: createJwt(),
     type: 'Bearer',
   };
 
@@ -44,7 +63,7 @@ describe('authService.resolveCurrentUserSession', () => {
         email: 'client@example.com',
         id: 'backend-user-id',
         role: 'CLIENT',
-        token: 'access-token',
+        token: tokenUser.token,
         type: 'Bearer',
       },
       profile: {
@@ -55,7 +74,7 @@ describe('authService.resolveCurrentUserSession', () => {
       isOnboardingComplete: true,
     });
 
-    expect(apiService.getToken()).toBe('access-token');
+    expect(apiService.getToken()).toBe(tokenUser.token);
     expect(apiClient.api.currentUser).toHaveBeenCalledTimes(1);
     expect(mockGetProfile).toHaveBeenCalledWith('backend-user-id');
   });
@@ -81,7 +100,7 @@ describe('authService.resolveCurrentUserSession', () => {
         email: 'client@example.com',
         id: 'backend-user-id',
         role: 'CLIENT',
-        token: 'access-token',
+        token: tokenUser.token,
         type: 'Bearer',
       },
       profile: {
@@ -110,7 +129,7 @@ describe('authService.resolveCurrentUserSession', () => {
         email: 'client@example.com',
         id: 'backend-user-id',
         role: 'CLIENT',
-        token: 'access-token',
+        token: tokenUser.token,
         type: 'Bearer',
       },
       profile: null,
@@ -132,7 +151,7 @@ describe('authService.resolveCurrentUserSession', () => {
         email: 'advisor@example.com',
         id: 'advisor-id',
         role: 'ADVISER',
-        token: 'access-token',
+        token: tokenUser.token,
         type: 'Bearer',
       },
       profile: null,
@@ -145,9 +164,7 @@ describe('authService.resolveCurrentUserSession', () => {
   it('clears the token when auth/me fails', async () => {
     jest.spyOn(apiClient.api, 'currentUser').mockRejectedValue(new Error('Unauthorized'));
 
-    await expect(authService.resolveCurrentUserSession(tokenUser)).rejects.toThrow(
-      'Unauthorized',
-    );
+    await expect(authService.resolveCurrentUserSession(tokenUser)).rejects.toThrow('Unauthorized');
 
     expect(apiService.getToken()).toBeNull();
   });
