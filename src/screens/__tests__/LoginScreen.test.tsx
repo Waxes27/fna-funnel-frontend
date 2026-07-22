@@ -103,6 +103,7 @@ describe('LoginScreen', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.spyOn(console, 'warn').mockImplementation(() => undefined);
 
     mockUseAppStore.mockImplementation((selector: (state: { login: typeof mockLogin }) => unknown) =>
       selector({ login: mockLogin }),
@@ -119,7 +120,11 @@ describe('LoginScreen', () => {
     mockSavePersistedAuthSession.mockResolvedValue(undefined);
   });
 
-  it('calls auth/me, persists the auth session, and then completes login', async () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('calls auth/me, completes login, and then persists the auth session', async () => {
     render(<LoginScreen />);
 
     await waitFor(() => {
@@ -141,10 +146,10 @@ describe('LoginScreen', () => {
     });
 
     expect(mockResolveCurrentUserSession.mock.invocationCallOrder[0]).toBeLessThan(
-      mockSavePersistedAuthSession.mock.invocationCallOrder[0],
-    );
-    expect(mockSavePersistedAuthSession.mock.invocationCallOrder[0]).toBeLessThan(
       mockLogin.mock.invocationCallOrder[0],
+    );
+    expect(mockLogin.mock.invocationCallOrder[0]).toBeLessThan(
+      mockSavePersistedAuthSession.mock.invocationCallOrder[0],
     );
   });
 
@@ -172,5 +177,26 @@ describe('LoginScreen', () => {
     await waitFor(() => {
       expect(promptAsync).toHaveBeenCalledTimes(1);
     });
+  });
+
+  it('still logs in when session persistence fails', async () => {
+    mockSavePersistedAuthSession.mockRejectedValueOnce(new Error('storage unavailable'));
+
+    render(<LoginScreen />);
+
+    await waitFor(() => {
+      expect(mockLogin).toHaveBeenCalledWith(mappedUser, {
+        profile: {
+          id: 'profile-1',
+          userId: 'user-1',
+        },
+        isOnboardingComplete: true,
+      });
+    });
+
+    expect(console.warn).toHaveBeenCalledWith(
+      'Failed to persist auth session',
+      expect.any(Error),
+    );
   });
 });

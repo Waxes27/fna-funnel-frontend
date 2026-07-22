@@ -71,11 +71,16 @@ const LoginScreen = () => {
 
         const tokenUser = mapKeycloakTokenResponseToUser(tokenResponse);
         const resolvedSession = await authService.resolveCurrentUserSession(tokenUser);
-        await savePersistedAuthSession(resolvedSession.user);
         login(resolvedSession.user, {
           profile: resolvedSession.profile,
           isOnboardingComplete: resolvedSession.isOnboardingComplete,
         });
+
+        try {
+          await savePersistedAuthSession(resolvedSession.user);
+        } catch (storageError) {
+          console.warn('Failed to persist auth session', storageError);
+        }
       } catch (error: any) {
         if (isMounted) {
           Alert.alert(
